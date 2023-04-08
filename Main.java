@@ -11,6 +11,7 @@ public class Main {
         "2 - Carregar um save");
 
         int option = scanner.nextInt();
+        scanner.nextLine();
         switch(option){
             case 1: //criar um save            
                 String name;
