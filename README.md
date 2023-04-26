@@ -4,4 +4,5 @@ A ideia para esse jogo é que as cartas tenham efeitos especificos para servirem
 
 Ele sera implementado ultilizando conceitos de jogos clássicos do genero RPG (ex. Final Fantasy) e Dungeon crawlers.
 
-Será feito com a framework libGDX
+
+Sera feito em terminal e se der certo depois ser portado para a framework libGDX.
