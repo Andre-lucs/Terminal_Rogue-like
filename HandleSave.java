@@ -1,4 +1,3 @@
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,12 +11,11 @@ public class HandleSave{
 		try{
 			FileOutputStream f = new FileOutputStream(new File(fileName));
 			ObjectOutputStream o = new ObjectOutputStream(f);
-	
+
 			o.writeObject(saveObject);
-	
+
 			o.close();
 			f.close();
-
 		} catch(FileNotFoundException e){
 			System.out.println(e.toString());
 		} catch(IOException e){

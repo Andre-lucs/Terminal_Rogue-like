@@ -1,5 +1,7 @@
 import java.util.Scanner;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Arrays;
 import structures.*;
 import main.*;
 
@@ -22,17 +24,20 @@ public class Game
         Card c = new AtkCard(new Vector2(1),5,4);
         Card c1 = new DefCard(new Vector2(1,2));
         maps.get(0).Insert(p, e, e2, c, c1);
-        maps.get(0).show();
-
+        PrintHud(maps.get(0), p);
         while(true){
+            Update();
             PlayerControls(maps.get(0), scanner);
+            PrintHud(maps.get(0), p);
         }
     }
 
-    public void PlayerControls(GameMap map, Scanner in){
+    private void Update(){
         map.Update();
         p.Update();
+    }
 
+    private void PlayerControls(GameMap map, Scanner in){
         boolean hitted = false;
 
         String command = in.next();//Pega a linha de commandos
@@ -42,18 +47,20 @@ public class Game
         ArrayList<String> Commands = new ArrayList<>();//junta os comandos em comandos maiores
         String MainCommand = "";
         for(String c : TempCommands){
-            if(c.equals(Controls.MOVE.get()) || c.equals(Controls.CARD.get()) || 
-            c.equals(Controls.PICKUP.get()) || c.equals(Controls.HELP.get()) ||
-            c.equals(Controls.INSPECIONATE.get())){
-                if(!MainCommand.equals("")){
-                    Commands.add(MainCommand);
+            List<String> controlsfiltered = Controls.getFilteredValues();
+            boolean foundMainCommand = false;
+    	    for(String control : controlsfiltered){//organiza os comandos juntando os caracteres que fazer parte do mesmo comando
+    		    if(c.equals(control)){
+                    if(!MainCommand.equals("")){
+                        Commands.add(MainCommand);
+                    }
+                    MainCommand = c;
+                    foundMainCommand = true;
                 }
-                MainCommand = c;
-            }
-            else {
+    	    }
+            if (!foundMainCommand) {
                 MainCommand += c;
             }
-
         }
         if(!MainCommand.equals("")){
             Commands.add(MainCommand);
@@ -67,7 +74,8 @@ public class Game
                     Vector2 dir = Controls.CheckDir(i);
                     p.move(dir, map);
                 }
-            } else if(key.equals(Controls.CARD.get())){//vai usar uma carta ///// c2wd c3 c1a
+            }
+            else if(key.equals(Controls.CARD.get())){//vai usar uma carta ///// c2wd c3 c1a
                 Card card = p.getCards().get(Integer.parseInt(actions.substring(0,1))-1);//pega a carta que sera usada
                 if (card instanceof AtkCard){//se for uma carta de ataque
                     String directions = actions.substring(1);
@@ -83,7 +91,8 @@ public class Game
                 }
 
                 if(hitted) System.out.println("Acertou");
-            } else if(key.equals(Controls.PICKUP.get())){//pegar um item
+            }
+            else if(key.equals(Controls.PICKUP.get())){//pegar um item
                 for(Entity i : map.getInstances()){
                     if(Vector2.compareVectors(p.getPosition(), i.getPosition())){
                         if(i instanceof Item){
@@ -93,23 +102,36 @@ public class Game
                         }
                     }
                 }
-            } else if(key.equals(Controls.INSPECIONATE.get())){
+            }
+            else if(key.equals(Controls.INSPECIONATE.get())){
                 for(Entity i : map.getInstances()){
                     if(Vector2.compareVectors(p.getPosition(), i.getPosition())){
                         if(i instanceof Card){
                             p.checkCard((Card)i);
                             break;
                         }else if(i instanceof Item){
-                            
+
                         }
-                        
                     }
                 }
-            } else if(key.equals(Controls.HELP.get())){//ver tela de ajuda sobre comandos
+            }
+            else if(key.equals(Controls.HELP.get())){//ver tela de ajuda sobre comandos
 
             }
         }
 
     }
 
+    public void PrintHud(GameMap map, Player p){
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+        for(String i : map.getRealMap()){//print map
+            System.out.println(i);
+        }
+        for(Enemy e : map.getEnemies()) {//print enemy info if hitted
+            if(e.KnowsPlayer()) e.PrintInfo();
+        }
+        p.PrintInfo();
+        p.PrintCards();
+    }
 }

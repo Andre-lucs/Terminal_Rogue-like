@@ -137,3 +137,5 @@ hs_err_pid*
 
 # Save Files #
 *.dat
+# Executabe file #
+*.sh

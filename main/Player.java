@@ -7,15 +7,15 @@ import structures.Vector2;
 
 public class Player extends Actor
 {
-    
+
     private ArrayList<Card> Cards;
     private ArrayList<Item> Items;
-    
+
     private int BaseDef;
     public int GuardUp;
-    
+
     private Card cardtopreview = null;
-    
+
     public Player(int atk, int def, Vector2 startPosition)
     {
         super(atk, def, 'P');
@@ -30,21 +30,19 @@ public class Player extends Actor
     public Player(){
         this(5,5, new Vector2(2));
     }
-    
+
     public ArrayList<Card> getCards(){
         return new ArrayList(Cards);
     }
     public ArrayList<Item> getItems(){
         return new ArrayList(Items);
     }
-    
+
     public void Update(){
         if (GuardUp > 0) GuardUp--;
         else if (GuardUp == 0) setDef(BaseDef);//reseta o valor da defesa apos usar carta de defesa
-        PrintInfo();
-        PrintCards();
     }
-    
+
     public void pickup(Item item){
         if (item instanceof Card){
             Cards.add((Card)item);
@@ -55,7 +53,7 @@ public class Player extends Actor
     public void PrintInfo(){
         System.out.println("Player Life: " + this.life+"/"+this.MaxLife);
     }
-    
+
     public void PrintCards(){
         if(Cards.size() > 0){
             System.out.println("Cards:");
@@ -85,7 +83,7 @@ public class Player extends Actor
             cardtopreview = null;
         }
     }
-    
+
     public void checkCard(Card card){
         cardtopreview = card;
     }

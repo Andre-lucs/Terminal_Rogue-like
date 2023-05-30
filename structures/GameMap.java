@@ -15,14 +15,14 @@ public class GameMap
                                   "#        #",
                                   "#        #",
                                   "##########"};//mapa que serve de base para os a construçao dos elemetos do mapa
-    
+
     private String[] realMap;//mapa armazenado em tempo real com as instancias dos objetos representados
     private ArrayList<Entity> instances;//Lista de objetos instanciados no mapa
     private Vector2 mapSize = new Vector2(0);//dimençoes do mapa
     private boolean showed = false;//se deve imprimir ele ao modificar
     private Player player;
     private ArrayList<Enemy> enemies;
-    
+
     public GameMap()
     {
         mapSize.x = initialMap[0].length();
@@ -45,15 +45,23 @@ public class GameMap
         this(pastMap.initialMap);
         instances = new ArrayList<Entity>(pastMap.instances);
     }
-    
+
     public Vector2 getMapSize(){
         return mapSize;
     }
-    
+
     public ArrayList<Entity> getInstances(){
         return new ArrayList<>(instances);
     }
-    
+
+    public String[] getRealMap(){
+        return realMap;
+    }
+
+    public ArrayList<Enemy> getEnemies(){
+        return enemies;
+    }
+
     public Entity getCell(int x, int y){
         for(Entity i : instances){
             Vector2 pos = i.getPosition();
@@ -69,7 +77,7 @@ public class GameMap
     public Entity getCell(Vector2 pos){
         return getCell(pos.x, pos.y);
     }
-    
+
     public Vector2 searchFirstElement(char c){
         for(int x = 0; x < mapSize.x; x++){
             for(int y = 0; y < mapSize.y; y++){
@@ -80,40 +88,35 @@ public class GameMap
         }
         return new Vector2();
     }
-    
+
     //atualiza o mapa atual
     public void Update(){
         GameMap newMap = new GameMap(this);
-        
+
         this.UpdateEnemies();
-        
+
         for(Entity i : instances){
             if(i instanceof Actor){
                 Actor a = (Actor) i;
                 if(a.getStatus() == Status.ALIVE){
                     newMap.updateCell(i.getPosition(), i.getStyle());
                 }
-                
+
             } else {
                 newMap.updateCell(i.getPosition(), i.getStyle());
             }
         };
         this.realMap = newMap.realMap;
-        if(showed) {
-            if(player != null){
-                if(player.getLife() <= 0){
-                    System.out.println("Game Over");
-                    System.exit(0);//////////Futuramente apenas sai da partida e volta para o main
-                }
-                updateCell(player.getPosition(), player.getStyle());//jogador pode ficar em cima de items e cartas
+        if(player != null){
+            if(player.getLife() <= 0){
+                System.out.println("Game Over");
+                System.exit(0);//////////Futuramente apenas sai da partida e volta para o main
             }
-            show();
+            updateCell(player.getPosition(), player.getStyle());//jogador pode ficar em cima de items e cartas
         }
-        for(Enemy e : enemies) {
-            if(e.KnowsPlayer()) e.PrintInfo();
-        }
+
     }
-    
+
     //atualiza o caractere de uma posiçao do mapa
     public void updateCell(int x, int y, char cell){
         realMap[y] = realMap[y].substring(0, x) + cell + realMap[y].substring(x+1);
@@ -121,41 +124,33 @@ public class GameMap
     public void updateCell(Vector2 pos, char cell){
         updateCell(pos.x, pos.y, cell);
     }
-    
-    //printa o mapa na tela
-    public void show(){ 
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
-        for(String i : realMap){
-            System.out.println(i);
-        }
-        showed = true;
-    }
-    
+
     //insere um objeto no mapa
     public void Insert(Entity... objects){
         for(Entity i : objects){
             if(i instanceof Player) player = (Player) i;
             if(i instanceof Enemy) enemies.add((Enemy) i);
-            instances.add(i);    
+            instances.add(i);
         }
+        Update();
     }
     //remove o objeto do mapa (deve ser chamado dentro do objeto por exemplo "map.Remove(this);")
     public void Remove(Entity object){
         instances.remove(object);
+        Update();
     }
-    
+
     public boolean haveEntity(Entity obj){
         return instances.contains(obj);
     }
-    
+
     private Entity getEntity(Entity e){
         for(Entity i : instances){
             if(i == e) return i;
         }
         return null;
     }
-    
+
     //checa se um objeto pode se mover para uma posiçao
     public boolean canMove(Vector2 newPos){
         Entity pos = getCell(newPos);
@@ -164,7 +159,7 @@ public class GameMap
         }
         return true;
     }
-    
+
     private void UpdateEnemies(){
         for(Enemy e : enemies){
             e.Update(this);
