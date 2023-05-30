@@ -8,7 +8,7 @@ public abstract class Card extends Item
                                 "#       #",
                                 "#       #",
                                 "#########"};
-                             
+
     protected int value;
     private int durability;
     private int uses;
@@ -19,14 +19,17 @@ public abstract class Card extends Item
         this.durability = dur;
         uses = 0;
     }
-    
+
     public int getUses(){
         return uses;
     }
     public int increaseUses(){
         return ++uses;
     }
-    
+    public boolean wasFullyUsed(){
+        return uses == durability;
+    }
+
     public void PrintHud(){
         for(String s : HudStyle){
             System.out.println(s);

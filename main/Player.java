@@ -34,6 +34,9 @@ public class Player extends Actor
     public ArrayList<Card> getCards(){
         return new ArrayList(Cards);
     }
+    public ArrayList<Card> getCardsRef(){
+        return Cards;
+    }
     public ArrayList<Item> getItems(){
         return new ArrayList(Items);
     }

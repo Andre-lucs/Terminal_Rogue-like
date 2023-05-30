@@ -5,10 +5,13 @@ import java.util.Arrays;
 import structures.*;
 import main.*;
 
+import java.lang.IndexOutOfBoundsException;
+
 public class Game
 {
     private Player p;
     private ArrayList<GameMap> maps;
+    public String warning = null;
 
     public Game(){
         maps = new ArrayList<>();
@@ -26,15 +29,15 @@ public class Game
         maps.get(0).Insert(p, e, e2, c, c1);
         PrintHud(maps.get(0), p);
         while(true){
-            Update();
-            PlayerControls(maps.get(0), scanner);
-            PrintHud(maps.get(0), p);
+            Update(maps.get(0), p, scanner);
         }
     }
 
-    private void Update(){
+    private void Update(GameMap map, Player p, Scanner scanner){
         map.Update();
         p.Update();
+        PlayerControls(maps.get(0), scanner);
+        PrintHud(maps.get(0), p);
     }
 
     private void PlayerControls(GameMap map, Scanner in){
@@ -75,7 +78,9 @@ public class Game
                     p.move(dir, map);
                 }
             }
+
             else if(key.equals(Controls.CARD.get())){//vai usar uma carta ///// c2wd c3 c1a
+                try{
                 Card card = p.getCards().get(Integer.parseInt(actions.substring(0,1))-1);//pega a carta que sera usada
                 if (card instanceof AtkCard){//se for uma carta de ataque
                     String directions = actions.substring(1);
@@ -83,14 +88,24 @@ public class Game
                         Vector2 dir = Controls.CheckDir(d);
                         int damage = (((AtkCard) card).getDamage()+p.getAtk())/2;
                         hitted = p.attack(damage, dir, map);
+                        card.increaseUses();
                     }
-                }else if(card instanceof DefCard){//se for uma carta de defesa
+                }
+                else if(card instanceof DefCard){//se for uma carta de defesa
                     System.out.println("Usou carta de defesa");
                     p.setDef(p.getDef() + ((DefCard) card).getDefense());
                     p.GuardUp = ((DefCard) card).getTime();
+                    card.increaseUses();
+                }
+                if(card.wasFullyUsed()){
+                    p.getCardsRef().remove(card);
                 }
 
                 if(hitted) System.out.println("Acertou");
+
+                } catch(IndexOutOfBoundsException e){
+                    warning = "Carta nao existe.";
+                }
             }
             else if(key.equals(Controls.PICKUP.get())){//pegar um item
                 for(Entity i : map.getInstances()){
@@ -131,6 +146,8 @@ public class Game
         for(Enemy e : map.getEnemies()) {//print enemy info if hitted
             if(e.KnowsPlayer()) e.PrintInfo();
         }
+        System.out.print((warning == null) ? "" :warning+"\n");
+        warning = null;
         p.PrintInfo();
         p.PrintCards();
     }
