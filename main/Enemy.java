@@ -8,7 +8,7 @@ public class Enemy extends Actor
     private int waitTime;
     private final int BaseWaitTime = 2;
     public Player player;
-    
+
     public Enemy(int atk,int def,char style){
         super(atk,def,style);
         increaseMaxLife(20);
@@ -17,13 +17,13 @@ public class Enemy extends Actor
     public Enemy(int atk,int def){
         this(atk, def, 'E');
     }
-    
+
     public void Update(GameMap map){
         if(waitTime-- == 0){
             if(player != null){
                 Vector2 dis = Vector2.getDistance(this.Position, player.Position);
-                if(((dis.x <= 1 && dis.x >= -1) && (dis.y <= 1 && dis.y >= -1))){   
-                    player.takeHit(this.Atk);
+                if(((dis.x <= 1 && dis.x >= -1) && (dis.y <= 1 && dis.y >= -1))){
+                    player.takeHit(this.attributes.get("ATK"));
                 }else{
                     if (dis.x > 1) dis.x = 1;
                     else if (dis.x < -1) dis.x = -1;
@@ -35,12 +35,12 @@ public class Enemy extends Actor
             waitTime = BaseWaitTime;
         }
     }
-    
+
     public boolean KnowsPlayer(){
         return player != null;
     }
-    
+
     public void PrintInfo(){
-        System.out.println("Enemy life: "+this.life+"/"+this.MaxLife);
+        System.out.println("Enemy life: "+this.life+"/"+this.attributes.get("MAXLIFE"));
     }
 }

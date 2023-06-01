@@ -9,9 +9,9 @@ public abstract class Card extends Item
                                 "#       #",
                                 "#########"};
 
-    protected int value;
     private int durability;
     private int uses;
+    
     public int getDur(){
         return durability;
     }

@@ -26,7 +26,9 @@ public class Game
         e2.setPosition(new Vector2(3));
         Card c = new AtkCard(new Vector2(1),5,4);
         Card c1 = new DefCard(new Vector2(1,2));
-        maps.get(0).Insert(p, e, e2, c, c1);
+        Item i = new Item("Helmet", "MAXLIFE", 10, new Vector2(6));
+        Item i2 = new Item("Shoe", "DEF", 5, new Vector2(7));
+        maps.get(0).Insert(p, e, e2, c, c1, i, i2);
         PrintHud(maps.get(0), p);
         while(true){
             Update(maps.get(0), p, scanner);
@@ -84,15 +86,16 @@ public class Game
                 Card card = p.getCards().get(Integer.parseInt(actions.substring(0,1))-1);//pega a carta que sera usada
                 if (card instanceof AtkCard){//se for uma carta de ataque
                     String directions = actions.substring(1);
-                    for(String d : directions.split("")){
-                        Vector2 dir = Controls.CheckDir(d);
-                        int damage = (((AtkCard) card).getDamage()+p.getAtk())/2;
-                        hitted = p.attack(damage, dir, map);
-                        card.increaseUses();
+                    if(directions != ""){
+                        for(String d : directions.split("")){
+                            Vector2 dir = Controls.CheckDir(d);
+                            int damage = (((AtkCard) card).getDamage()+p.getAtk())/2;
+                            hitted = p.attack(damage, dir, map);
+                            card.increaseUses();
+                        }
                     }
                 }
                 else if(card instanceof DefCard){//se for uma carta de defesa
-                    System.out.println("Usou carta de defesa");
                     p.setDef(p.getDef() + ((DefCard) card).getDefense());
                     p.GuardUp = ((DefCard) card).getTime();
                     card.increaseUses();
@@ -101,7 +104,7 @@ public class Game
                     p.getCardsRef().remove(card);
                 }
 
-                if(hitted) System.out.println("Acertou");
+                if(hitted) warning = "Acertou";
 
                 } catch(IndexOutOfBoundsException e){
                     warning = "Carta nao existe.";
@@ -125,7 +128,8 @@ public class Game
                             p.checkCard((Card)i);
                             break;
                         }else if(i instanceof Item){
-
+                            warning = ("Type:" + ((Item)i).getType()+"\n"+
+                            "Description: "+ ((Item)i).getAttribute() +" "+ ((Item)i).getValue());
                         }
                     }
                 }
@@ -140,8 +144,43 @@ public class Game
     public void PrintHud(GameMap map, Player p){
         System.out.print("\033[H\033[2J");
         System.out.flush();
-        for(String i : map.getRealMap()){//print map
-            System.out.println(i);
+        String helmet = (p.Equip.get("Helmet") != null) ? ( (p.Equip.get("Helmet").getValue()<10) ? p.Equip.get("Helmet").getValue()+" " : String.valueOf(p.Equip.get("Helmet").getValue()) ) : "  ";
+        String chestPlate = (p.Equip.get("ChestPlate") != null) ? ( (p.Equip.get("ChestPlate").getValue()<10) ? p.Equip.get("ChestPlate").getValue()+" " : String.valueOf(p.Equip.get("ChestPlate").getValue()) ) : "  ";
+        String shoe = (p.Equip.get("Shoe") != null) ? ( (p.Equip.get("Shoe").getValue()<10) ? p.Equip.get("Shoe").getValue()+" " : String.valueOf(p.Equip.get("Shoe").getValue()) ) : "  ";
+        String glove = (p.Equip.get("Glove") != null) ? ( (p.Equip.get("Glove").getValue()<10) ? p.Equip.get("Glove").getValue()+" " : String.valueOf(p.Equip.get("Glove").getValue()) ) : "  ";
+
+        String[] playerEquip = {
+    "                    .-'-'-.        #########",
+    "                    /     \\        #  "+((p.Equip.get("Helmet") != null)? p.Equip.get("Helmet").getAttribute() : "   " )+"  #",
+    "                   | o   o | <-----#  "+helmet+"   #",
+    "                   \\   ∆   /       #       #",
+    "                    '-...-'        #########",
+    "   #########           |           #########",
+    "   #  "+((p.Equip.get("ChestPlate") != null)? p.Equip.get("ChestPlate").getAttribute() : "   " )+"  #          /|\\          #  "+((p.Equip.get("Glove") != null)? p.Equip.get("Glove").getAttribute() : "   " )+"  #",
+    "   #  "+chestPlate+"   #-------| / | \\ <-------#  "+glove+"   #",
+    "   #       #       v/  |  \\        #       #",
+    "   #########       /   |   \\       #########",
+    "   #########      /   / \\   \\",
+    "   #  "+((p.Equip.get("Shoe") != null)? p.Equip.get("Shoe").getAttribute() : "   " )+"  #         /   \\",
+    "   #  "+shoe+"   #------> /     \\",
+    "   #       #       /       \\",
+    "   #########      /         \\"
+};
+
+
+        int maxY = Math.max(playerEquip.length, map.getMapSize().y);
+        String[] tempMap = map.getRealMap();
+        for(int i = 0; i <  maxY; i++){
+            try{
+            System.out.print(tempMap[i]);
+            }catch(ArrayIndexOutOfBoundsException e){
+                System.out.print(String.valueOf(' ').repeat(map.getMapSize().x));
+            }
+            try{
+            System.out.println(playerEquip[i]);
+            }catch(ArrayIndexOutOfBoundsException e){
+                System.out.println();
+            }
         }
         for(Enemy e : map.getEnemies()) {//print enemy info if hitted
             if(e.KnowsPlayer()) e.PrintInfo();

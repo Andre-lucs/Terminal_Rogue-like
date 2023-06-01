@@ -1,6 +1,9 @@
 package main;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import structures.GameMap;
 import structures.Vector2;
@@ -8,13 +11,13 @@ import structures.Vector2;
 public class Player extends Actor
 {
 
-    private ArrayList<Card> Cards;
-    private ArrayList<Item> Items;
+    private List<Card> Cards;
 
     private int BaseDef;
     public int GuardUp;
 
     private Card cardtopreview = null;
+    public Map<String, Item> Equip;
 
     public Player(int atk, int def, Vector2 startPosition)
     {
@@ -25,20 +28,24 @@ public class Player extends Actor
         status = status.ALIVE;
         Position = new Vector2(startPosition);
         Cards = new ArrayList<>();
-        Items = new ArrayList<>();
+        Equip = new HashMap<>();
+        Equip.put("Helmet", null);
+        Equip.put("ChestPlate", null);
+        Equip.put("Shoe", null);
+        Equip.put("Glove", null);
     }
     public Player(){
         this(5,5, new Vector2(2));
     }
 
-    public ArrayList<Card> getCards(){
+    public List<Card> getCards(){
         return new ArrayList(Cards);
     }
-    public ArrayList<Card> getCardsRef(){
+    public List<Card> getCardsRef(){
         return Cards;
     }
-    public ArrayList<Item> getItems(){
-        return new ArrayList(Items);
+    public Map<String, Item> getEquip(){
+        return new HashMap<>(Equip);
     }
 
     public void Update(){
@@ -50,11 +57,76 @@ public class Player extends Actor
         if (item instanceof Card){
             Cards.add((Card)item);
             item.setPosition(new Vector2());
+            return;
+        }
+        switch(item.getType()){
+            case "Helmet":
+            if(Equip.get("Helmet") != null){
+                changeItem(item);
+            }
+            Equip.put("Helmet", item);
+            break;
+            case "ChestPlate":
+            if(Equip.get("ChestPlate") != null){
+                changeItem(item);
+            }
+            Equip.put("ChestPlate", item);
+            break;
+            case "Glove":
+            if(Equip.get("Glove") != null){
+                changeItem(item);
+            }
+            Equip.put("Glove", item);
+            break;
+            case "Shoe":
+            if(Equip.get("Shoe") != null){
+                changeItem(item);
+            }
+            Equip.put("Shoe", item);
+            break;
+        }
+        handleAttribute(item);
+        item.setPosition(new Vector2());
+    }
+
+    private void changeItem(Item item){
+        Item atual = null;
+        switch(item.getType()){
+            case "Helmet":
+            atual = Equip.get("Helmet");
+            break;
+            case "ChestPlate":
+            atual = Equip.get("ChestPlate");
+            break;
+            case "Glove":
+            atual = Equip.get("Glove");
+            break;
+            case "Shoe":
+            atual = Equip.get("Shoe");
+            break;
+        }
+        if(atual != null){
+            atual.value = atual.value * -1;
+            handleAttribute(atual);
+        }
+    }
+
+    private void handleAttribute(Item item){
+        switch(item.getAttribute()){
+            case "ATK":
+            this.setAtk(attributes.get("ATK")+item.getValue());
+            break;
+            case "DEF":
+            this.setDef(attributes.get("DEF")+item.getValue());
+            break;
+            case "MAXLIFE":
+            this.increaseMaxLife(item.getValue());
+            break;
         }
     }
 
     public void PrintInfo(){
-        System.out.println("Player Life: " + this.life+"/"+this.MaxLife);
+        System.out.println("Player Life: " + this.life+"/"+this.attributes.get("MAXLIFE"));
     }
 
     public void PrintCards(){

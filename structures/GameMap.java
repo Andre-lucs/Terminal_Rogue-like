@@ -47,7 +47,7 @@ public class GameMap
     }
 
     public Vector2 getMapSize(){
-        return mapSize;
+        return new Vector2(mapSize);
     }
 
     public ArrayList<Entity> getInstances(){
