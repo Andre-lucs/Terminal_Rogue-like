@@ -21,7 +21,7 @@ public class Actor extends Entity
         attributes = new HashMap<>();
         attributes.put("ATK", atk);
         attributes.put("DEF", def);
-        attributes.put("MAXLIFE", 0);
+        attributes.put("MHP", 0);
         this.Style = style;
         status = Status.ALIVE;
         gen = new Random();
@@ -53,18 +53,18 @@ public class Actor extends Entity
             decreaseMaxLife(amount*-1);
             return;
         }
-        this.attributes.put("MAXLIFE", attributes.get("MAXLIFE") + amount);
+        this.attributes.put("MHP", attributes.get("MHP") + amount);
         recoverLife(amount);
     }
 
     public void decreaseMaxLife(int amount){
-        this.attributes.put("MAXLIFE", attributes.get("MAXLIFE") - amount);
-        if(life > attributes.get("MAXLIFE")) life = attributes.get("MAXLIFE");
+        this.attributes.put("MHP", attributes.get("MHP") - amount);
+        if(life > attributes.get("MHP")) life = attributes.get("MHP");
     }
 
     public void recoverLife(int recoverAmount){
         life += recoverAmount;
-        if(life > attributes.get("MAXLIFE")) life = attributes.get("MAXLIFE");
+        if(life > attributes.get("MHP")) life = attributes.get("MHP");
     }
 
     public boolean attack(int damage, int dirX, int dirY, GameMap map){

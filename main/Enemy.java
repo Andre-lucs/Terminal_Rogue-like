@@ -41,6 +41,6 @@ public class Enemy extends Actor
     }
 
     public void PrintInfo(){
-        System.out.println("Enemy life: "+this.life+"/"+this.attributes.get("MAXLIFE"));
+        System.out.println("Enemy life: "+this.life+"/"+this.attributes.get("MHP"));
     }
 }

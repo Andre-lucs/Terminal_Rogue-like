@@ -119,14 +119,14 @@ public class Player extends Actor
             case "DEF":
             this.setDef(attributes.get("DEF")+item.getValue());
             break;
-            case "MAXLIFE":
+            case "MHP":
             this.increaseMaxLife(item.getValue());
             break;
         }
     }
 
     public void PrintInfo(){
-        System.out.println("Player Life: " + this.life+"/"+this.attributes.get("MAXLIFE"));
+        System.out.println("Player Life: " + this.life+"/"+this.attributes.get("MHP"));
     }
 
     public void PrintCards(){

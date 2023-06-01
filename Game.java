@@ -26,7 +26,7 @@ public class Game
         e2.setPosition(new Vector2(3));
         Card c = new AtkCard(new Vector2(1),5,4);
         Card c1 = new DefCard(new Vector2(1,2));
-        Item i = new Item("Helmet", "MAXLIFE", 10, new Vector2(6));
+        Item i = new Item("Helmet", "MHP", 10, new Vector2(6));
         Item i2 = new Item("Shoe", "DEF", 5, new Vector2(7));
         maps.get(0).Insert(p, e, e2, c, c1, i, i2);
         PrintHud(maps.get(0), p);
