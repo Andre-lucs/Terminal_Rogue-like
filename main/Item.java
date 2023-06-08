@@ -25,6 +25,9 @@ public class Item extends Entity
         return type;
     }
 
+    public void setValue(int newValue){
+        this.value = newValue;
+    }
     public int getValue(){
         return value;
     }

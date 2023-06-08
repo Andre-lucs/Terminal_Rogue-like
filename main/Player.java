@@ -7,16 +7,15 @@ import java.util.Map;
 import java.util.Scanner;
 import structures.GameMap;
 import structures.Vector2;
+import structures.Status;
 
 public class Player extends Actor
 {
-
-    private List<Card> Cards;
-
     private int BaseDef;
     public int GuardUp;
 
     private Card cardtopreview = null;
+    private List<Card> Cards;
     public Map<String, Item> Equip;
 
     public Player(int atk, int def, Vector2 startPosition)
@@ -33,6 +32,7 @@ public class Player extends Actor
         Equip.put("ChestPlate", null);
         Equip.put("Shoe", null);
         Equip.put("Glove", null);
+        Cards.add(Card.CreatePunchATK());
     }
     public Player(){
         this(5,5, new Vector2(2));
@@ -51,6 +51,25 @@ public class Player extends Actor
     public void Update(){
         if (GuardUp > 0) GuardUp--;
         else if (GuardUp == 0) setDef(BaseDef);//reseta o valor da defesa apos usar carta de defesa
+    }
+
+    public boolean attack(int damage, int dirX, int dirY, GameMap map){
+        Entity ent = map.getCell(Position.x+dirX, Position.y+dirY);
+        if(ent instanceof Enemy){
+            Enemy en = (Enemy) ent;
+            if(en.player == null) en.player = (Player) this;
+            if(en.takeHit(damage)){
+                if(en.status == Status.DEAD){
+                    map.Remove(en);
+                    en.player = null;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean attack(int damage, Vector2 dir, GameMap map){
+        return attack(damage, dir.x, dir.y, map);
     }
 
     public void pickup(Item item){
@@ -146,7 +165,7 @@ public class Player extends Actor
                 System.out.println();
                 if(i == 5){
                     for(Card c : Cards){
-                        System.out.print("   "+c.getUses()+"/"+c.getDur()+"    ");
+                        System.out.print((c.getDur()!=-1) ? ("   "+c.getUses()+"/"+c.getDur()+"    ") : ("          "));
                     }
                     System.out.println();
                 }
@@ -154,7 +173,7 @@ public class Player extends Actor
         }
         if(cardtopreview != null){
             System.out.println("Preview:");
-            cardtopreview.PrintHud();
+            cardtopreview.Print();
             cardtopreview = null;
         }
     }

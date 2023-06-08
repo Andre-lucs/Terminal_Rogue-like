@@ -67,27 +67,6 @@ public class Actor extends Entity
         if(life > attributes.get("MHP")) life = attributes.get("MHP");
     }
 
-    public boolean attack(int damage, int dirX, int dirY, GameMap map){
-        Entity ent = map.getCell(Position.x+dirX, Position.y+dirY);
-        if(ent instanceof Enemy){
-            Enemy en = (Enemy) ent;
-            if(this instanceof Player){
-                if(en.player == null) en.player = (Player) this;
-            }
-            if(en.takeHit(damage)){
-                if(en.status == Status.DEAD){
-                    map.Remove(en);
-                    en.player = null;
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-    public boolean attack(int damage, Vector2 dir, GameMap map){
-        return attack(damage, dir.x, dir.y, map);
-    }
-
     public boolean takeHit(int rawDamage){
         if(gen.nextDouble() > this.attributes.get("DEF")/100){
             life -= rawDamage;

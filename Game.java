@@ -6,6 +6,7 @@ import structures.*;
 import main.*;
 
 import java.lang.IndexOutOfBoundsException;
+import java.util.concurrent.TimeUnit;
 
 public class Game
 {
@@ -13,9 +14,83 @@ public class Game
     private ArrayList<GameMap> maps;
     public String warning = null;
 
+    List<String[]> labirintos = new ArrayList<>();
+
     public Game(){
         maps = new ArrayList<>();
-        maps.add(new GameMap());
+        labirintos = new ArrayList<>();
+
+        String[] labirinto1 = {
+            "#################################################",
+            "#                                               #",
+            "# # ### ### # ##### ### ### # ##### ### ### #   #",
+            "# #             #   #     # #     #         #   #",
+            "# ############# # ### ### # ##### # #########   #",
+            "#               #         # #     # #           #",
+            "##### ### ##### ############# # ### # ##### #####",
+            "#     #   # #   #           # #   # #     #     #",
+            "# ### ##### ### # ######### # ### ######### #####",
+            "#   #       #   #     #     #               #   #",
+            "# # ######### ##### # ##### ############# ###   #",
+            "# #         #       #               #   #       #",
+            "# ### ##### ############### ######### # #########",
+            "#     #     #           # #         # #         #",
+            "##### # ##### ######### # # ####### ### ####    #",
+            "#     #   #           #   # #     #   #     #####",
+            "# ### ### ######### # ####### ### ### ### #     #",
+            "#               #   #     # #     #       #     #",
+            "#################################################"
+        };
+
+        String[] labirinto2 = {
+            "#######################################",
+            "#    #                   #            #",
+            "# #  # ##### ### ##### ##### ### ######",
+            "# #         #       #       #     #   #",
+            "# ####### # ######### ########### ### #",
+            "#     #   #   #           #     #     #",
+            "# ### ##### # ### ####### ### # ##### #",
+            "# #       # #   #       #   # #     # #",
+            "# ######### ### ##### # # # # ##### # #",
+            "#     #       #   #   # #   #   #     #",
+            "# ### # ######### # # ######### ##### #",
+            "#   #               #         #   #   #",
+            "# # ######### ########### # # ### # ###",
+            "# #         #       #     # #     #   #",
+            "# ####### ### ##### # ##### ######### #",
+            "#         #   #     #     #         # #",
+            "##### ### # ### ### ##### ##### ### # #",
+            "#   # #     #   #         #     #   # #",
+            "# # # ####### # ##### ##### # ### # ###",
+            "# #           #               #   #   #",
+            "#######################################"
+        };
+
+        String[] labirinto3 = {
+            "###################################",
+            "#       #                       # #",
+            "# ##### # ### ### # ### ### ### # #",
+            "#     #   #   #     #   #       # #",
+            "# ### # ##### # ### ##### ##### # #",
+            "#   #         #         #       # #",
+            "### ######### ######### # ##### # #",
+            "#   #   #     #         #   #   # #",
+            "# ### # # ##### ########### # ### #",
+            "#     # #     #   #       #   #   #",
+            "# ##### ##### # # # ##### ##### # #",
+            "#     #       #   #   #   #   #   #",
+            "# ### ########### # # # ### # ##  #",
+            "#   #     #     # # # #   # #   # #",
+            "##### ### # ### # ### ##### # # # #",
+            "#   #   #   #       #   #   # # # #",
+            "# # ### ########### ### # ### # ###",
+            "#       #             #   #   #   #",
+            "###################################"
+        };
+        labirintos.add(labirinto1);
+        labirintos.add(labirinto2);
+        labirintos.add(labirinto3);
+        labirintos.forEach(i -> maps.add(new GameMap(i)));
         p = new Player(5, 5, new Vector2(2));
     }
 
@@ -24,11 +99,13 @@ public class Game
         Enemy e = new Enemy(20,2), e2 = new Enemy(3,3);
         e.setPosition(new Vector2(5));
         e2.setPosition(new Vector2(3));
-        Card c = new AtkCard(new Vector2(1),5,4);
-        Card c1 = new DefCard(new Vector2(1,2));
+        Card c = Card.CreateATK(5,4,new Vector2(1));
+        Card c1 = Card.CreateDEF(50, 3, 3,new Vector2(1,2));
+        Card heal = MGKCard.CreateHeal(new Vector2(5,1));
         Item i = new Item("Helmet", "MHP", 10, new Vector2(6));
         Item i2 = new Item("Shoe", "DEF", 5, new Vector2(7));
-        maps.get(0).Insert(p, e, e2, c, c1, i, i2);
+
+        maps.get(0).Insert(p, e, e2, c, c1, i, i2, heal);
         PrintHud(maps.get(0), p);
         while(true){
             Update(maps.get(0), p, scanner);
@@ -40,6 +117,24 @@ public class Game
         p.Update();
         PlayerControls(maps.get(0), scanner);
         PrintHud(maps.get(0), p);
+    }
+
+    private void Sleep(){
+        try {
+            TimeUnit.MILLISECONDS.sleep((long)100);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void UpdateAndSleep(GameMap map){
+        map.Update();
+        PrintHud(map, p);
+        try {
+            TimeUnit.MILLISECONDS.sleep((long)100);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void PlayerControls(GameMap map, Scanner in){
@@ -78,27 +173,32 @@ public class Game
                 for(String i : actions.split("")){
                     Vector2 dir = Controls.CheckDir(i);
                     p.move(dir, map);
+                    UpdateAndSleep(map);
                 }
             }
 
             else if(key.equals(Controls.CARD.get())){//vai usar uma carta ///// c2wd c3 c1a
                 try{
                 Card card = p.getCards().get(Integer.parseInt(actions.substring(0,1))-1);//pega a carta que sera usada
-                if (card instanceof AtkCard){//se for uma carta de ataque
+                if (card.getType() == "ATK"){//se for uma carta de ataque
                     String directions = actions.substring(1);
-                    if(directions != ""){
+                    if(directions.length() > 0){
                         for(String d : directions.split("")){
                             Vector2 dir = Controls.CheckDir(d);
-                            int damage = (((AtkCard) card).getDamage()+p.getAtk())/2;
-                            hitted = p.attack(damage, dir, map);
-                            card.increaseUses();
+                            hitted = card.Use(p, dir, map);
+                            UpdateAndSleep(map);
                         }
                     }
                 }
-                else if(card instanceof DefCard){//se for uma carta de defesa
-                    p.setDef(p.getDef() + ((DefCard) card).getDefense());
-                    p.GuardUp = ((DefCard) card).getTime();
-                    card.increaseUses();
+                else if(card.getType() == "DEF"){//se for uma carta de defesa
+                    card.Use(p,new Vector2(), map);
+                    UpdateAndSleep(map);
+                }
+                else if(card instanceof MGKCard){
+                    MGKCard mc = (MGKCard) card;
+                    if(mc.getType() == "HEAL"){
+                        mc.Use(p);
+                    }
                 }
                 if(card.wasFullyUsed()){
                     p.getCardsRef().remove(card);
@@ -133,10 +233,19 @@ public class Game
                         }
                     }
                 }
+                try{
+                    int i = Integer.parseInt(actions);
+                    try{warning = p.getCards().get(i-1).GetDesc();}
+                    catch(IndexOutOfBoundsException e){}
+                }catch(NumberFormatException e){
+
+                }
             }
             else if(key.equals(Controls.HELP.get())){//ver tela de ajuda sobre comandos
 
             }
+
+            Sleep();
         }
 
     }
