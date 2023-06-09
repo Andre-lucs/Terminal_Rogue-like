@@ -91,7 +91,7 @@ public class Game
         labirintos.add(labirinto2);
         labirintos.add(labirinto3);
         labirintos.forEach(i -> maps.add(new GameMap(i)));
-        p = new Player(5, 5, new Vector2(2));
+        p = new Player(5, 5, new Vector2(1,2));
     }
 
     public void Start(){
@@ -117,6 +117,10 @@ public class Game
         p.Update();
         PlayerControls(maps.get(0), scanner);
         PrintHud(maps.get(0), p);
+        if(p.getLife() <= 0){
+            System.out.println("Game Over");
+            System.exit(0);//Futuramente apenas sai da partida e volta para o main
+        }
     }
 
     private void Sleep(){
@@ -274,14 +278,16 @@ public class Game
     "   #  "+shoe+"   #------> /     \\",
     "   #       #       /       \\",
     "   #########      /         \\"
-};
+        };
 
 
         int maxY = Math.max(playerEquip.length, map.getMapSize().y);
         String[] tempMap = map.getRealMap();
         for(int i = 0; i <  maxY; i++){
             try{
-            System.out.print(tempMap[i]);
+                for(int j = 0; j < tempMap[i].length(); j++){
+                    System.out.print((map.visibility[i][j]) ? tempMap[i].charAt(j) : " ");
+                }
             }catch(ArrayIndexOutOfBoundsException e){
                 System.out.print(String.valueOf(' ').repeat(map.getMapSize().x));
             }

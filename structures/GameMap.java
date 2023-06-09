@@ -5,16 +5,7 @@ import main.*;
 
 public class GameMap
 {
-    private String[] initialMap ={"##########",
-                                  "#        #",
-                                  "#        #",
-                                  "#        #",
-                                  "#        #",
-                                  "#        #",
-                                  "#        #",
-                                  "#        #",
-                                  "#        #",
-                                  "##########"};//mapa que serve de base para os a construçao dos elemetos do mapa
+    private String[] initialMap ={"##########","#        #","#        #","#        #","#        #","#        #","#        #","#        #","#        #","##########"};//mapa que serve de base para os a construçao dos elemetos do mapa
 
     private String[] realMap;//mapa armazenado em tempo real com as instancias dos objetos representados
     private ArrayList<Entity> instances;//Lista de objetos instanciados no mapa
@@ -22,6 +13,7 @@ public class GameMap
     private boolean showed = false;//se deve imprimir ele ao modificar
     private Player player;
     private ArrayList<Enemy> enemies;
+    public boolean[][] visibility;
 
     public GameMap()
     {
@@ -30,6 +22,7 @@ public class GameMap
         instances = new ArrayList<Entity>();
         enemies = new ArrayList<Enemy>();
         this.realMap = this.initialMap.clone();
+        this.visibility = new boolean[mapSize.y][mapSize.x];
     }
     public GameMap(String[] newMap)
     {
@@ -39,6 +32,7 @@ public class GameMap
         instances = new ArrayList<Entity>();
         enemies = new ArrayList<Enemy>();
         this.realMap = this.initialMap.clone();
+        this.visibility = new boolean[mapSize.y][mapSize.x];
     }
     public GameMap(GameMap pastMap)
     {
@@ -101,18 +95,14 @@ public class GameMap
                 if(a.getStatus() == Status.ALIVE){
                     newMap.updateCell(i.getPosition(), i.getStyle());
                 }
-
             } else {
                 newMap.updateCell(i.getPosition(), i.getStyle());
             }
         };
         this.realMap = newMap.realMap;
         if(player != null){
-            if(player.getLife() <= 0){
-                System.out.println("Game Over");
-                System.exit(0);//////////Futuramente apenas sai da partida e volta para o main
-            }
             updateCell(player.getPosition(), player.getStyle());//jogador pode ficar em cima de items e cartas
+            setVisible(player.getPosition(), 5);
         }
 
     }
@@ -164,5 +154,26 @@ public class GameMap
         for(Enemy e : enemies){
             e.Update(this);
         }
+    }
+
+    public void setVisible(Vector2 pos, int range){
+        if(range <= 0) return;
+        try{
+            visibility[pos.y][pos.x] = true;
+        }catch(ArrayIndexOutOfBoundsException e){
+            return;
+        }
+        if(this.realMap[pos.y].charAt(pos.x) == '#') return;
+
+        Vector2 pUp = new Vector2(pos),pDw = new Vector2(pos),pR = new Vector2(pos),pL = new Vector2(pos);
+
+        pUp.y += 1;
+        pDw.y -= 1;
+        pR.x += 1;
+        pL.x -= 1;
+        setVisible(pUp, range-1);
+        setVisible(pDw, range-1);
+        setVisible(pR, range-1);
+        setVisible(pL, range-1);
     }
 }
