@@ -2,15 +2,11 @@ package main;
 
 import structures.Vector2;
 import structures.GameMap;
+import java.util.Random;
 
 public class Card extends Item
 {
-    public String[] HudStyle = {"#########",
-                                "#       #",
-                                "# CARD  #",
-                                "#       #",
-                                "#       #",
-                                "#########"};
+    public String[] HudStyle;
 
     protected int durability;
     protected int uses;
@@ -58,7 +54,7 @@ public class Card extends Item
             @Override
             public boolean Use(Player p){
                 if(this.getType() == "DEF"){
-                    p.setDef(p.getDef() + (getValue()));
+                    p.setDef(p.getDef() + (int) (getValue()));
                     p.GuardUp = time;
                     increaseUses();
                 }
@@ -70,6 +66,23 @@ public class Card extends Item
         c.setPosition(new Vector2(pos));
         c.setDesc("Aumenta a sua chance de esquivar de um ataque inimigo por algum tempo.");
         return c;
+    }
+
+    public static Card CreateRandom(float multiplier, Vector2 position){
+        Random rdn = new Random(System.nanoTime());
+        Card i = CreatePunchATK();
+        switch(rdn.nextInt(0,4)){
+            case 0:
+            i = CreateATK((int)( rdn.nextInt(8,(int)(15*multiplier))), rdn.nextInt(3,6), position);
+            break;
+            case 1:
+            i = CreateDEF((int) (rdn.nextInt(10,(int)(25*multiplier))), rdn.nextInt(3,6), rdn.nextInt(1,4), position);
+            break;
+            case 2:
+            i = MGKCard.CreateHeal((int) (rdn.nextInt( 5,(int)(10*multiplier))), position);
+            break;
+        }
+        return i;
     }
 
     public boolean Use(Player p, Vector2 dir, GameMap map ){

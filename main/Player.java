@@ -75,7 +75,7 @@ public class Player extends Actor
     public void pickup(Item item){
         if (item instanceof Card){
             Cards.add((Card)item);
-            item.setPosition(new Vector2());
+            //item.setPosition(new Vector2());
             return;
         }
         switch(item.getType()){

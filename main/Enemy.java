@@ -17,6 +17,10 @@ public class Enemy extends Actor
     public Enemy(int atk,int def){
         this(atk, def, 'E');
     }
+    public Enemy(int atk,int def, Vector2 pos){
+        this(atk, def, 'E');
+        this.setPosition(pos);
+    }
 
     public void Update(GameMap map){
         if(waitTime-- == 0){

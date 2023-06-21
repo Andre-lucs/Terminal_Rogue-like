@@ -2,10 +2,12 @@ package structures;
 
 import java.util.ArrayList;
 import main.*;
+import java.util.Arrays;
+import java.util.Random;
 
 public class GameMap
 {
-    private String[] initialMap ={"##########","#        #","#        #","#        #","#        #","#        #","#        #","#        #","#        #","##########"};//mapa que serve de base para os a construçao dos elemetos do mapa
+    private String[] initialMap;
 
     private String[] realMap;//mapa armazenado em tempo real com as instancias dos objetos representados
     private ArrayList<Entity> instances;//Lista de objetos instanciados no mapa
@@ -23,6 +25,13 @@ public class GameMap
         enemies = new ArrayList<Enemy>();
         this.realMap = this.initialMap.clone();
         this.visibility = new boolean[mapSize.y][mapSize.x];
+
+        Arrays.fill(visibility[0], true);
+        Arrays.fill(visibility[mapSize.y-1], true);
+        for(int i = 1; i < mapSize.y; i++){
+            visibility[i][0] = true;
+            visibility[i][mapSize.x-1] = true;
+        }
     }
     public GameMap(String[] newMap)
     {
@@ -33,6 +42,13 @@ public class GameMap
         enemies = new ArrayList<Enemy>();
         this.realMap = this.initialMap.clone();
         this.visibility = new boolean[mapSize.y][mapSize.x];
+
+        Arrays.fill(visibility[0], true);
+        Arrays.fill(visibility[mapSize.y-1], true);
+        for(int i = 1; i < mapSize.y; i++){
+            visibility[i][0] = true;
+            visibility[i][mapSize.x-1] = true;
+        }
     }
     public GameMap(GameMap pastMap)
     {
@@ -90,14 +106,7 @@ public class GameMap
         this.UpdateEnemies();
 
         for(Entity i : instances){
-            if(i instanceof Actor){
-                Actor a = (Actor) i;
-                if(a.getStatus() == Status.ALIVE){
-                    newMap.updateCell(i.getPosition(), i.getStyle());
-                }
-            } else {
-                newMap.updateCell(i.getPosition(), i.getStyle());
-            }
+            newMap.updateCell(i.getPosition(), i.getStyle());
         };
         this.realMap = newMap.realMap;
         if(player != null){
@@ -118,6 +127,7 @@ public class GameMap
     //insere um objeto no mapa
     public void Insert(Entity... objects){
         for(Entity i : objects){
+            if(getCell(i.getPosition()).getStyle() == '#') throw new GameMapExeption("Entity Position invalid: the position is on a wall.");
             if(i instanceof Player) player = (Player) i;
             if(i instanceof Enemy) enemies.add((Enemy) i);
             instances.add(i);
@@ -127,6 +137,9 @@ public class GameMap
     //remove o objeto do mapa (deve ser chamado dentro do objeto por exemplo "map.Remove(this);")
     public void Remove(Entity object){
         instances.remove(object);
+        if(object instanceof Enemy){
+            enemies.remove(object);
+        }
         Update();
     }
 
@@ -153,6 +166,7 @@ public class GameMap
     private void UpdateEnemies(){
         for(Enemy e : enemies){
             e.Update(this);
+            if(e.getStatus() == Status.DEAD) Remove(e);
         }
     }
 
@@ -175,5 +189,14 @@ public class GameMap
         setVisible(pDw, range-1);
         setVisible(pR, range-1);
         setVisible(pL, range-1);
+    }
+
+    public Vector2 getRandomFreePosition(){
+        Random rdn = new Random(System.nanoTime());
+        Vector2 pos = new Vector2(rdn.nextInt(mapSize.x),rdn.nextInt(mapSize.y));
+        while(getCell(pos).getStyle() != ' '){
+            pos = new Vector2(rdn.nextInt(mapSize.x),rdn.nextInt(mapSize.y));
+        }
+        return pos;
     }
 }

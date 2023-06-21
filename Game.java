@@ -2,6 +2,7 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Random;
 import structures.*;
 import main.*;
 
@@ -10,117 +11,98 @@ import java.util.concurrent.TimeUnit;
 
 public class Game
 {
+    public static final String TEXT_RESET = "\u001B[0m";
+	public static final String TEXT_RED = "\u001B[31m";
+	public static final String TEXT_BLACK = "\u001B[30m";
+	public static final String TEXT_GREEN = "\u001B[32m";
+	public static final String TEXT_BLUE = "\u001B[34m";
+	public static final String TEXT_PURPLE = "\u001B[35m";
+	public static final String TEXT_CYAN = "\u001B[36m";
+	public static final String TEXT_YELLOW = "\u001B[33m";
+	public static final String TEXT_WHITE = "\u001B[37m";
+
+	public static final String ANSI_YELLOW_BACKGROUND = "\u001B[43m";
+	public static final String ANSI_BLUE_BACKGROUND = "\u001B[44m";
+	public static final String ANSI_BLACK_BACKGROUND = "\u001B[40m";
+	public static final String ANSI_PURPLE_BACKGROUND = "\u001B[45m";
+	public static final String ANSI_CYAN_BACKGROUND = "\u001B[46m";
+	public static final String ANSI_GREEN_BACKGROUND = "\u001B[42m";
+	public static final String ANSI_WHITE_BACKGROUND = "\u001B[47m";
+
     private Player p;
     private ArrayList<GameMap> maps;
     public String warning = null;
-
-    List<String[]> labirintos = new ArrayList<>();
+    private MapGenerator gen;
+    private int mapIndex = 0;
+    private float levelDiff;
 
     public Game(){
+        levelDiff = 1;
         maps = new ArrayList<>();
-        labirintos = new ArrayList<>();
-
-        String[] labirinto1 = {
-            "#################################################",
-            "#                                               #",
-            "# # ### ### # ##### ### ### # ##### ### ### #   #",
-            "# #             #   #     # #     #         #   #",
-            "# ############# # ### ### # ##### # #########   #",
-            "#               #         # #     # #           #",
-            "##### ### ##### ############# # ### # ##### #####",
-            "#     #   # #   #           # #   # #     #     #",
-            "# ### ##### ### # ######### # ### ######### #####",
-            "#   #       #   #     #     #               #   #",
-            "# # ######### ##### # ##### ############# ###   #",
-            "# #         #       #               #   #       #",
-            "# ### ##### ############### ######### # #########",
-            "#     #     #           # #         # #         #",
-            "##### # ##### ######### # # ####### ### ####    #",
-            "#     #   #           #   # #     #   #     #####",
-            "# ### ### ######### # ####### ### ### ### #     #",
-            "#               #   #     # #     #       #     #",
-            "#################################################"
-        };
-
-        String[] labirinto2 = {
-            "#######################################",
-            "#    #                   #            #",
-            "# #  # ##### ### ##### ##### ### ######",
-            "# #         #       #       #     #   #",
-            "# ####### # ######### ########### ### #",
-            "#     #   #   #           #     #     #",
-            "# ### ##### # ### ####### ### # ##### #",
-            "# #       # #   #       #   # #     # #",
-            "# ######### ### ##### # # # # ##### # #",
-            "#     #       #   #   # #   #   #     #",
-            "# ### # ######### # # ######### ##### #",
-            "#   #               #         #   #   #",
-            "# # ######### ########### # # ### # ###",
-            "# #         #       #     # #     #   #",
-            "# ####### ### ##### # ##### ######### #",
-            "#         #   #     #     #         # #",
-            "##### ### # ### ### ##### ##### ### # #",
-            "#   # #     #   #         #     #   # #",
-            "# # # ####### # ##### ##### # ### # ###",
-            "# #           #               #   #   #",
-            "#######################################"
-        };
-
-        String[] labirinto3 = {
-            "###################################",
-            "#       #                       # #",
-            "# ##### # ### ### # ### ### ### # #",
-            "#     #   #   #     #   #       # #",
-            "# ### # ##### # ### ##### ##### # #",
-            "#   #         #         #       # #",
-            "### ######### ######### # ##### # #",
-            "#   #   #     #         #   #   # #",
-            "# ### # # ##### ########### # ### #",
-            "#     # #     #   #       #   #   #",
-            "# ##### ##### # # # ##### ##### # #",
-            "#     #       #   #   #   #   #   #",
-            "# ### ########### # # # ### # ##  #",
-            "#   #     #     # # # #   # #   # #",
-            "##### ### # ### # ### ##### # # # #",
-            "#   #   #   #       #   #   # # # #",
-            "# # ### ########### ### # ### # ###",
-            "#       #             #   #   #   #",
-            "###################################"
-        };
-        labirintos.add(labirinto1);
-        labirintos.add(labirinto2);
-        labirintos.add(labirinto3);
-        labirintos.forEach(i -> maps.add(new GameMap(i)));
-        p = new Player(5, 5, new Vector2(1,2));
+        Vector2 startPos = new Vector2(8);
+        gen = new MapGenerator(new Vector2(30,20), startPos);
+        p = new Player(5, 5, startPos);
+        p.increaseMaxLife(90);
     }
 
     public void Start(){
+        String[] labirinto = gen.getNewMap();
+        maps.add(new GameMap(labirinto));
+        PopulateMap(maps.get(mapIndex));
         Scanner scanner = new Scanner(System.in);
-        Enemy e = new Enemy(20,2), e2 = new Enemy(3,3);
-        e.setPosition(new Vector2(5));
-        e2.setPosition(new Vector2(3));
-        Card c = Card.CreateATK(5,4,new Vector2(1));
-        Card c1 = Card.CreateDEF(50, 3, 3,new Vector2(1,2));
-        Card heal = MGKCard.CreateHeal(new Vector2(5,1));
-        Item i = new Item("Helmet", "MHP", 10, new Vector2(6));
-        Item i2 = new Item("Shoe", "DEF", 5, new Vector2(7));
 
-        maps.get(0).Insert(p, e, e2, c, c1, i, i2, heal);
-        PrintHud(maps.get(0), p);
+        PrintHud(maps.get(mapIndex), p);
         while(true){
-            Update(maps.get(0), p, scanner);
+            Update(maps.get(mapIndex), p, scanner);
         }
     }
 
     private void Update(GameMap map, Player p, Scanner scanner){
         map.Update();
         p.Update();
-        PlayerControls(maps.get(0), scanner);
-        PrintHud(maps.get(0), p);
+        PlayerControls(maps.get(mapIndex), scanner);
+        PrintHud(maps.get(mapIndex), p);
         if(p.getLife() <= 0){
             System.out.println("Game Over");
             System.exit(0);//Futuramente apenas sai da partida e volta para o main
         }
+        if(map.getEnemies().size() == 0){
+            System.out.println("moreu geral");
+            gen.setPos(new Vector2(p.getPosition()));
+            String[] labirinto = gen.getNewMap();
+            maps.add(new GameMap(labirinto));
+            mapIndex++;
+            PopulateMap(maps.get(mapIndex));
+            PrintHud(maps.get(mapIndex), p);
+        }
+    }
+
+    private void PopulateMap(GameMap map){
+        map.Insert(p);
+        Random rdn = new Random(System.nanoTime());
+        Enemy boss = new Enemy((int) (40 * levelDiff),(int) (8*levelDiff), map.getRandomFreePosition());
+        boss.setStyle('B');
+        List<Enemy> enemiestopick = new ArrayList<>();
+        List<Card> cardstopick = new ArrayList<>();
+        List<Item> itemstopick = new ArrayList<>();
+        for(int i = 0; i <rdn.nextInt(2,8); i++) {
+            enemiestopick.add(new Enemy(rdn.nextInt((int)(levelDiff*25)), rdn.nextInt((int)(levelDiff* 5)), map.getRandomFreePosition()));
+        }
+        for(int i = 0; i <rdn.nextInt(2,8); i++) cardstopick.add(Card.CreateRandom(levelDiff, map.getRandomFreePosition()));
+        for(int i = 0; i <rdn.nextInt(2,8); i++) itemstopick.add(Item.CreateRandom(levelDiff, map.getRandomFreePosition()));
+        //pegar aleatorio e colocar no mapa
+        List<Item> items = new ArrayList<>();
+        for(int i = 0; i <rdn.nextInt(2,8); i++){
+            items.add((rdn.nextInt(2) == 0) ? cardstopick.get(rdn.nextInt(cardstopick.size())) : itemstopick.get(rdn.nextInt(itemstopick.size())));
+        }
+        try{
+            map.Insert(boss);
+            enemiestopick.forEach(e -> {map.Insert(e);});
+            items.forEach(i -> {map.Insert(i);});
+        }catch(GameMapExeption exep){
+            System.out.println("Bas Pos");
+        }
+        map.Update();
     }
 
     private void Sleep(){
@@ -300,6 +282,7 @@ public class Game
         for(Enemy e : map.getEnemies()) {//print enemy info if hitted
             if(e.KnowsPlayer()) e.PrintInfo();
         }
+        System.out.println("Inimigos Faltando: "+ map.getEnemies().size());
         System.out.print((warning == null) ? "" :warning+"\n");
         warning = null;
         p.PrintInfo();

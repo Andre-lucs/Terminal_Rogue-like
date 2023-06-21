@@ -23,7 +23,7 @@ public class MGKCard extends Card{
         this.HudStyle = s;
     }
 
-    public static MGKCard CreateHeal(Vector2 pos){
+    public static MGKCard CreateHeal(int amount, Vector2 pos){
         MGKCard c = new MGKCard(){
             @Override
             public boolean Use(Player p){
@@ -32,10 +32,10 @@ public class MGKCard extends Card{
                 return false;
             }
         };
+        c.setValue(amount);
         c.setType("HEAL");
         c.setPosition(new Vector2(pos));
         c.setHudStyle();
-        //c.HudStyle[2] = "#  HEAL  #";
         c.setDesc("Cura certa quantidade de vida.");
         return c;
     }
