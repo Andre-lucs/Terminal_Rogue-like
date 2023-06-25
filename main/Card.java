@@ -45,7 +45,7 @@ public class Card extends Item
     }
     public static Card CreateATK(int damage, int dur, Vector2 pos){
         Card c = new Card("ATK", damage, dur);
-        c.setPosition(new Vector2(pos));
+        c.setPosition(pos);
         c.setDesc("Pode atacar em 4 direcoes e tem 1 de distancia.");
         return c;
     }
@@ -63,7 +63,7 @@ public class Card extends Item
         };
         c.time = time;
         c.setHudStyle();
-        c.setPosition(new Vector2(pos));
+        c.setPosition(pos);
         c.setDesc("Aumenta a sua chance de esquivar de um ataque inimigo por algum tempo.");
         return c;
     }

@@ -9,9 +9,9 @@ import structures.GameMap;
 import structures.Vector2;
 import structures.Status;
 
-public class Player extends Actor
+public class Player extends Actor implements Killable
 {
-    private int BaseDef;
+    private final int BaseDef;
     public int GuardUp;
 
     private Card cardtopreview = null;
@@ -39,7 +39,7 @@ public class Player extends Actor
     }
 
     public List<Card> getCards(){
-        return new ArrayList(Cards);
+        return new ArrayList<>(Cards);
     }
     public List<Card> getCardsRef(){
         return Cards;
@@ -55,12 +55,12 @@ public class Player extends Actor
 
     public boolean attack(int damage, int dirX, int dirY, GameMap map){
         Entity ent = map.getCell(Position.x+dirX, Position.y+dirY);
-        if(ent instanceof Enemy){
+        if(ent instanceof Killable){
             Enemy en = (Enemy) ent;
             if(en.player == null) en.player = (Player) this;
             if(en.takeHit(damage)){
                 if(en.status == Status.DEAD){
-                    map.Remove(en);
+                    //map.Remove(en);
                     en.player = null;
                 }
                 return true;
@@ -75,77 +75,42 @@ public class Player extends Actor
     public void pickup(Item item){
         if (item instanceof Card){
             Cards.add((Card)item);
-            //item.setPosition(new Vector2());
             return;
         }
-        switch(item.getType()){
-            case "Helmet":
-            if(Equip.get("Helmet") != null){
-                changeItem(item);
-            }
-            Equip.put("Helmet", item);
-            break;
-            case "ChestPlate":
-            if(Equip.get("ChestPlate") != null){
-                changeItem(item);
-            }
-            Equip.put("ChestPlate", item);
-            break;
-            case "Glove":
-            if(Equip.get("Glove") != null){
-                changeItem(item);
-            }
-            Equip.put("Glove", item);
-            break;
-            case "Shoe":
-            if(Equip.get("Shoe") != null){
-                changeItem(item);
-            }
-            Equip.put("Shoe", item);
-            break;
-        }
-        handleAttribute(item);
-        item.setPosition(new Vector2());
+        changeItem(item);
+
     }
 
     private void changeItem(Item item){
         Item atual = null;
-        switch(item.getType()){
-            case "Helmet":
-            atual = Equip.get("Helmet");
-            break;
-            case "ChestPlate":
-            atual = Equip.get("ChestPlate");
-            break;
-            case "Glove":
-            atual = Equip.get("Glove");
-            break;
-            case "Shoe":
-            atual = Equip.get("Shoe");
-            break;
-        }
-        if(atual != null){
-            atual.value = atual.value * -1;
-            handleAttribute(atual);
-        }
+        atual = Equip.get(item.getType());
+        handleAttribute(atual, item);
+        Equip.put(item.getType(), item);
     }
 
-    private void handleAttribute(Item item){
-        switch(item.getAttribute()){
-            case "ATK":
-            this.setAtk(attributes.get("ATK")+item.getValue());
-            break;
-            case "DEF":
-            this.setDef(attributes.get("DEF")+item.getValue());
-            break;
-            case "MHP":
-            this.increaseMaxLife(item.getValue());
-            break;
+    private void handleAttribute(Item atualItem ,Item newItem){
+        if(atualItem != null){
+            String attribute = atualItem.getAttribute();
+            if(!attribute.equals("MHP")) {
+                int newValue = attributes.get(attribute) - atualItem.getValue();
+                attributes.put(attribute, newValue);
+            }else {
+                this.decreaseMaxLife(atualItem.getValue());
+            }
+        }
+        String attribute = newItem.getAttribute();
+        if(!attribute.equals("MHP")) {
+            int newValue = attributes.get(attribute) + newItem.getValue();
+            attributes.put(attribute, newValue);
+        }else {
+            this.increaseMaxLife(newItem.getValue());
         }
     }
 
     public void PrintInfo(){
         System.out.println("Player Life: " + this.life+"/"+this.attributes.get("MHP"));
+        System.out.println("ATK: "+ this.attributes.get("ATK"));
+        System.out.println("DEF: "+ this.attributes.get("DEF"));
     }
 
     public void PrintCards(){
@@ -180,5 +145,22 @@ public class Player extends Actor
 
     public void checkCard(Card card){
         cardtopreview = card;
+    }
+    @Override
+    public boolean takeHit(int dmg){
+        if(gen.nextDouble() > this.attributes.get("DEF")/100){
+            life -= (int) (dmg*0.8);
+            if (life <= 0){
+                status = Status.DEAD;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void onDeath(GameMap map){
+        System.out.println("Voce Morreu");
+        System.out.println("Deseja recomeçar?");
     }
 }

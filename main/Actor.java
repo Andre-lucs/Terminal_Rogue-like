@@ -8,12 +8,12 @@ import structures.Vector2;
 import structures.GameMap;
 import structures.Status;
 
-public class Actor extends Entity
+public abstract class Actor extends Entity
 {
     protected int life;
     protected Map<String, Integer> attributes;
     protected Status status;
-    private Random gen;
+    protected Random gen;
 
     public Actor(int atk, int def, char style)
     {
@@ -65,17 +65,6 @@ public class Actor extends Entity
     public void recoverLife(int recoverAmount){
         life += recoverAmount;
         if(life > attributes.get("MHP")) life = attributes.get("MHP");
-    }
-
-    public boolean takeHit(int rawDamage){
-        if(gen.nextDouble() > this.attributes.get("DEF")/100){
-            life -= rawDamage;
-            if (life <= 0){
-                status = Status.DEAD;
-            }
-            return true;
-        }
-        return false;
     }
 
     public void move(int xSpd, int ySpd, GameMap map){

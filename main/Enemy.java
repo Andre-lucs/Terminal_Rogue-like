@@ -1,9 +1,12 @@
 package main;
 
+import java.util.Random;
+
 import structures.Vector2;
 import structures.GameMap;
+import structures.Status;
 
-public class Enemy extends Actor
+public class Enemy extends Actor implements Killable
 {
     private int waitTime;
     private final int BaseWaitTime = 2;
@@ -20,6 +23,28 @@ public class Enemy extends Actor
     public Enemy(int atk,int def, Vector2 pos){
         this(atk, def, 'E');
         this.setPosition(pos);
+    }
+
+    @Override
+    public boolean takeHit(int rawDamage){
+        if(super.gen.nextDouble() > this.attributes.get("DEF")/100){
+            life -= (int) (rawDamage*1.2);
+            if (life <= 0){
+                status = Status.DEAD;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void onDeath(GameMap map){
+        Random rdn = new Random(System.nanoTime());
+        Vector2 pos = this.getPosition();
+        int levelDiff = this.attributes.get("MHP")/20;
+        Item item = (rdn.nextInt(2) == 0) ? Card.CreateRandom(levelDiff, pos) : Item.CreateRandom(levelDiff, pos);
+        map.Insert(item);
+        System.out.println("Inimigo foi morto");
     }
 
     public void Update(GameMap map){

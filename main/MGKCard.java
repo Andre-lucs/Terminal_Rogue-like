@@ -34,7 +34,7 @@ public class MGKCard extends Card{
         };
         c.setValue(amount);
         c.setType("HEAL");
-        c.setPosition(new Vector2(pos));
+        c.setPosition(pos);
         c.setHudStyle();
         c.setDesc("Cura certa quantidade de vida.");
         return c;

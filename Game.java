@@ -11,30 +11,13 @@ import java.util.concurrent.TimeUnit;
 
 public class Game
 {
-    public static final String TEXT_RESET = "\u001B[0m";
-	public static final String TEXT_RED = "\u001B[31m";
-	public static final String TEXT_BLACK = "\u001B[30m";
-	public static final String TEXT_GREEN = "\u001B[32m";
-	public static final String TEXT_BLUE = "\u001B[34m";
-	public static final String TEXT_PURPLE = "\u001B[35m";
-	public static final String TEXT_CYAN = "\u001B[36m";
-	public static final String TEXT_YELLOW = "\u001B[33m";
-	public static final String TEXT_WHITE = "\u001B[37m";
-
-	public static final String ANSI_YELLOW_BACKGROUND = "\u001B[43m";
-	public static final String ANSI_BLUE_BACKGROUND = "\u001B[44m";
-	public static final String ANSI_BLACK_BACKGROUND = "\u001B[40m";
-	public static final String ANSI_PURPLE_BACKGROUND = "\u001B[45m";
-	public static final String ANSI_CYAN_BACKGROUND = "\u001B[46m";
-	public static final String ANSI_GREEN_BACKGROUND = "\u001B[42m";
-	public static final String ANSI_WHITE_BACKGROUND = "\u001B[47m";
-
     private Player p;
     private ArrayList<GameMap> maps;
     public String warning = null;
     private MapGenerator gen;
-    private int mapIndex = 0;
+    private int mapIndex = -1;
     private float levelDiff;
+    private boolean levelEnded;
 
     public Game(){
         levelDiff = 1;
@@ -46,9 +29,10 @@ public class Game
     }
 
     public void Start(){
-        String[] labirinto = gen.getNewMap();
-        maps.add(new GameMap(labirinto));
-        PopulateMap(maps.get(mapIndex));
+        NextLevel();
+        /*GameMap labirinto = gen.getNewMap();
+        maps.add(labirinto);
+        PopulateMap(maps.get(mapIndex));*/
         Scanner scanner = new Scanner(System.in);
 
         PrintHud(maps.get(mapIndex), p);
@@ -58,49 +42,63 @@ public class Game
     }
 
     private void Update(GameMap map, Player p, Scanner scanner){
+        if(map.Boss == null){
+            levelEnded = true;
+        }
         map.Update();
         p.Update();
         PlayerControls(maps.get(mapIndex), scanner);
         PrintHud(maps.get(mapIndex), p);
         if(p.getLife() <= 0){
-            System.out.println("Game Over");
-            System.exit(0);//Futuramente apenas sai da partida e volta para o main
-        }
-        if(map.getEnemies().size() == 0){
-            System.out.println("moreu geral");
-            gen.setPos(new Vector2(p.getPosition()));
-            String[] labirinto = gen.getNewMap();
-            maps.add(new GameMap(labirinto));
-            mapIndex++;
-            PopulateMap(maps.get(mapIndex));
-            PrintHud(maps.get(mapIndex), p);
+            p.onDeath(maps.get(mapIndex));
         }
     }
 
+    private void NextLevel(){
+        mapIndex++;
+        levelDiff += 0.2;
+        levelEnded = false;
+        gen.setPos(new Vector2(p.getPosition()));
+        GameMap labirinto = gen.getNewMap();
+        maps.add(labirinto);
+        PopulateMap(maps.get(mapIndex));
+        PrintHud(maps.get(mapIndex), p);
+    }
+
     private void PopulateMap(GameMap map){
+        p.setPosition(map.getRandomFreePosition());
         map.Insert(p);
         Random rdn = new Random(System.nanoTime());
+        //cria e insere os inimigos (incluindo o chefe)
         Enemy boss = new Enemy((int) (40 * levelDiff),(int) (8*levelDiff), map.getRandomFreePosition());
         boss.setStyle('B');
-        List<Enemy> enemiestopick = new ArrayList<>();
-        List<Card> cardstopick = new ArrayList<>();
-        List<Item> itemstopick = new ArrayList<>();
-        for(int i = 0; i <rdn.nextInt(2,8); i++) {
-            enemiestopick.add(new Enemy(rdn.nextInt((int)(levelDiff*25)), rdn.nextInt((int)(levelDiff* 5)), map.getRandomFreePosition()));
+        map.Boss = boss;
+        map.Insert(boss);
+        for(int i = 0; i <rdn.nextInt(2,7); i++) {
+            map.Insert(new Enemy(rdn.nextInt((int)(levelDiff*25)), rdn.nextInt((int)(levelDiff* 5)), map.getRandomFreePosition()){
+                @Override
+                public boolean takeHit(int dmg){
+                    if(super.gen.nextDouble() > this.attributes.get("DEF")/100){
+                        life -= (int) (dmg*(1.5/levelDiff));
+                        if (life <= 0){
+                            status = Status.DEAD;
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+            });
         }
-        for(int i = 0; i <rdn.nextInt(2,8); i++) cardstopick.add(Card.CreateRandom(levelDiff, map.getRandomFreePosition()));
-        for(int i = 0; i <rdn.nextInt(2,8); i++) itemstopick.add(Item.CreateRandom(levelDiff, map.getRandomFreePosition()));
-        //pegar aleatorio e colocar no mapa
-        List<Item> items = new ArrayList<>();
-        for(int i = 0; i <rdn.nextInt(2,8); i++){
-            items.add((rdn.nextInt(2) == 0) ? cardstopick.get(rdn.nextInt(cardstopick.size())) : itemstopick.get(rdn.nextInt(itemstopick.size())));
-        }
-        try{
-            map.Insert(boss);
-            enemiestopick.forEach(e -> {map.Insert(e);});
-            items.forEach(i -> {map.Insert(i);});
-        }catch(GameMapExeption exep){
-            System.out.println("Bas Pos");
+        //cria e insere as cartas e items do mapa
+        for(int i = 0; i <rdn.nextInt(4,9); i++){
+            Vector2 pos = map.getRandomFreePosition();
+            Item item = (rdn.nextInt(2) == 0) ? Card.CreateRandom(levelDiff, pos) : Item.CreateRandom(levelDiff, pos);
+            map.Insert(item);
+        }//items em lugares normais
+        for(int i = 0;i < 2; i++){
+            Vector2[] pos = {map.getPositionOnWall(),map.getPositionOnWall()};
+            Item[] item = {Card.CreateRandom(levelDiff*2, pos[0]), Item.CreateRandom(levelDiff*2, pos[1])};
+            map.Insert(item[0], item[1]);//items em paredes
         }
         map.Update();
     }
@@ -127,6 +125,10 @@ public class Game
         boolean hitted = false;
 
         String command = in.next();//Pega a linha de commandos
+        if(command.contains("next") && levelEnded){
+            NextLevel();
+            return;
+        }
         command = (command.length() != 0) ? command.substring(0, command.length()) : " ";//organiza ela
         String[] TempCommands = command.split("");//divide em varias Strings
 
@@ -251,8 +253,8 @@ public class Game
     "                   \\   ∆   /       #       #",
     "                    '-...-'        #########",
     "   #########           |           #########",
-    "   #  "+((p.Equip.get("ChestPlate") != null)? p.Equip.get("ChestPlate").getAttribute() : "   " )+"  #          /|\\          #  "+((p.Equip.get("Glove") != null)? p.Equip.get("Glove").getAttribute() : "   " )+"  #",
-    "   #  "+chestPlate+"   #-------| / | \\ <-------#  "+glove+"   #",
+    "   #  "+((p.Equip.get("Glove") != null)? p.Equip.get("Glove").getAttribute() : "   " )+"  #          /|\\          #  "+((p.Equip.get("ChestPlate") != null)? p.Equip.get("ChestPlate").getAttribute() : "   " )+"  #",
+    "   #  "+glove+"   #-------| / | \\ <-------#  "+chestPlate+"   #",
     "   #       #       v/  |  \\        #       #",
     "   #########       /   |   \\       #########",
     "   #########      /   / \\   \\",
@@ -282,7 +284,8 @@ public class Game
         for(Enemy e : map.getEnemies()) {//print enemy info if hitted
             if(e.KnowsPlayer()) e.PrintInfo();
         }
-        System.out.println("Inimigos Faltando: "+ map.getEnemies().size());
+        if(levelEnded)System.out.println("O chefe foi morto. digite \"next\" para ir para o proximo nivel.");
+        else System.out.println("Inimigos Faltando: "+ map.getEnemies().size());
         System.out.print((warning == null) ? "" :warning+"\n");
         warning = null;
         p.PrintInfo();

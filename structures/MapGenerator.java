@@ -14,7 +14,7 @@ public class MapGenerator{
         this.startPosition = startPos;
     }
 
-    public String[] getNewMap(){
+    public GameMap getNewMap(){
         map = new char[size.y][size.x];
         visited = new boolean[size.y][size.x];
         Arrays.fill(map[0],'#');
@@ -36,7 +36,9 @@ public class MapGenerator{
             }
             newMap[i] = String.valueOf(map[i]);
         }
-        return newMap;
+        GameMap m = new GameMap(newMap);
+        m = new GameMap(m, visited);
+        return m;
     }
 
     private void step(Vector2 pos){
