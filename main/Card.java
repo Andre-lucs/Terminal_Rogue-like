@@ -1,7 +1,7 @@
 package main;
 
 import structures.Vector2;
-import structures.GameMap;
+
 import java.util.Random;
 
 public class Card extends Item
@@ -53,12 +53,12 @@ public class Card extends Item
         Card c = new Card("DEF", defense, dur){
             @Override
             public boolean Use(Player p){
-                if(this.getType() == "DEF"){
-                    p.setDef(p.getDef() + (int) (getValue()));
-                    p.GuardUp = time;
-                    increaseUses();
-                }
-                return false;
+                if(p.GuardUp > 0) return false;
+                p.baseDef = p.getDef();
+                p.setDef(p.getDef() + (int) (getValue()));
+                p.GuardUp = time;
+                increaseUses();
+                return true;
             }
         };
         c.time = time;
@@ -90,6 +90,7 @@ public class Card extends Item
         if(this.type == "ATK"){
             int damage = ((getValue()+p.getAtk())/2);
             hitted = p.attack(damage, dir, map);
+            map.Update(false);
         }
         if(getDur() > 0)increaseUses();
         return hitted;
@@ -119,10 +120,10 @@ public class Card extends Item
         this.HudStyle = s;
         switch(this.type){
             case "ATK":
-                this.setStyle('A');
+                this.setStyle("A");
             break;
             case "DEF":
-                this.setStyle('D');
+                this.setStyle("D");
             break;
         }
     }

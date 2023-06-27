@@ -1,6 +1,5 @@
-package main;
+package structures;
 
-import structures.Vector2;
 import java.util.ArrayList;
 import java.util.Arrays;
 

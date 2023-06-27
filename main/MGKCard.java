@@ -11,7 +11,7 @@ public class MGKCard extends Card{
 
     @Override
     protected void setHudStyle(){
-        this.setStyle('M');
+        this.setStyle("M");
         String typeString = "#  "+this.getType()+"  #";
         String valueString = (value<10) ? ("#   "+value+"    #"):("#   "+value+"   #");
         String[] s = {"##########",

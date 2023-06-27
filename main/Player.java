@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
-import structures.GameMap;
+
 import structures.Vector2;
 import structures.Status;
 
 public class Player extends Actor implements Killable
 {
-    private final int BaseDef;
+    public int baseDef;
     public int GuardUp;
 
     private Card cardtopreview = null;
@@ -20,11 +19,11 @@ public class Player extends Actor implements Killable
 
     public Player(int atk, int def, Vector2 startPosition)
     {
-        super(atk, def, 'P');
-        BaseDef = def;
+        super(atk, def, "P");
+        baseDef = def;
         GuardUp = 0;
-        increaseMaxLife(20);
-        status = status.ALIVE;
+        increaseMaxLife(50);//vida base
+        status = Status.ALIVE;
         Position = new Vector2(startPosition);
         Cards = new ArrayList<>();
         Equip = new HashMap<>();
@@ -49,8 +48,7 @@ public class Player extends Actor implements Killable
     }
 
     public void Update(){
-        if (GuardUp > 0) GuardUp--;
-        else if (GuardUp == 0) setDef(BaseDef);//reseta o valor da defesa apos usar carta de defesa
+        if (GuardUp-- == 0) setDef(baseDef);//reseta o valor da defesa apos usar carta de defesa
     }
 
     public boolean attack(int damage, int dirX, int dirY, GameMap map){
@@ -105,6 +103,7 @@ public class Player extends Actor implements Killable
         }else {
             this.increaseMaxLife(newItem.getValue());
         }
+        baseDef = getDef();
     }
 
     public void PrintInfo(){
@@ -161,6 +160,6 @@ public class Player extends Actor implements Killable
     @Override
     public void onDeath(GameMap map){
         System.out.println("Voce Morreu");
-        System.out.println("Deseja recomeçar?");
+        System.out.println("Deseja recomeçar?(yes/no)");
     }
 }

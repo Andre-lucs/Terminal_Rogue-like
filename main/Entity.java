@@ -5,8 +5,8 @@ import structures.*;
 public class Entity
 {
     protected Vector2 Position;
-    protected char Style;
-    
+    protected String Style;
+
     public Entity(){
         Position = new Vector2(0);
     }
@@ -19,11 +19,12 @@ public class Entity
         Position = new Vector2(v);
     }
     
-    public char getStyle(){
+    public String getStyle(){
         return Style;
     }
     
-    public void setStyle(char style){
+    public void setStyle(String style){
         Style = style;
     }
+
 }

@@ -1,5 +1,7 @@
 package structures;
 
+import main.GameMap;
+
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.Arrays;
 
@@ -46,21 +48,21 @@ public class MapGenerator{
 
         pos = new Vector2(pos);
 
-        while(visited[pos.y][pos.x+1] == false || visited[pos.y][pos.x-1] == false || visited[pos.y+1][pos.x] == false || visited[pos.y-1][pos.x] == false){
+        while(!visited[pos.y][pos.x + 1] || !visited[pos.y][pos.x - 1] || !visited[pos.y + 1][pos.x] || !visited[pos.y - 1][pos.x]){
             Directions dir =Directions.getDir(ThreadLocalRandom.current().nextInt(1,5));
-            if(visited[pos.y+dir.getY()][pos.x+dir.getX()] == true) continue;
+            if(visited[pos.y + dir.getY()][pos.x + dir.getX()]) continue;
 
             int distance = ThreadLocalRandom.current().nextInt(1,6);
 
             if(dir == Directions.UP || dir == Directions.DOWN){
                 int y;
                 for(y = pos.y+dir.getY(); y != pos.y+distance*dir.getY(); y+= dir.getY()){
-                    if(visited[y][pos.x] == true) return;
-					if(visited[y][pos.x+1] == false){
+                    if(visited[y][pos.x]) return;
+					if(!visited[y][pos.x + 1]){
 		                map[y][pos.x+1] = '#';
 		                visited[y][pos.x+1] = true;
 					}
-					if(visited[y][pos.x-1] == false){
+					if(!visited[y][pos.x - 1]){
 		                map[y][pos.x-1] = '#';
 		                visited[y][pos.x-1] = true;
                     }
@@ -72,12 +74,12 @@ public class MapGenerator{
             }else if(dir == Directions.LEFT || dir == Directions.RIGHT){
                 int x;
                 for(x = pos.x+dir.getX(); x != pos.x+distance*dir.getX(); x+= dir.getX()){
-                    if(visited[pos.y][x] == true) return;
-                    if(visited[pos.y+1][x] == false){
+                    if(visited[pos.y][x]) return;
+                    if(!visited[pos.y + 1][x]){
                         map[pos.y+1][x] = '#';
                         visited[pos.y+1][x] = true;
                     }
-                    if(visited[pos.y-1][x] == false){
+                    if(!visited[pos.y - 1][x]){
                         map[pos.y-1][x] = '#';
                         visited[pos.y-1][x] = true;
                     }

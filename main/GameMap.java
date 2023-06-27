@@ -1,7 +1,10 @@
-package structures;
+package main;
 
 import java.util.ArrayList;
-import main.*;
+
+import structures.Status;
+import structures.Vector2;
+
 import java.util.Arrays;
 import java.util.Random;
 
@@ -21,6 +24,8 @@ public class GameMap
     private ArrayList<Vector2> freePosition;
     private ArrayList<Vector2> positionsNotVisitedByGenerator;
 
+    public int enemyTimer;
+
     protected GameMap()
     {
         mapSize.x = initialMap[0].length();
@@ -29,6 +34,7 @@ public class GameMap
         enemies = new ArrayList<Enemy>();
         this.realMap = this.initialMap.clone();
         this.visibility = new boolean[mapSize.y][mapSize.x];
+        enemyTimer = 2;
 
         Arrays.fill(visibility[0], true);
         Arrays.fill(visibility[mapSize.y-1], true);
@@ -37,13 +43,14 @@ public class GameMap
             visibility[i][mapSize.x-1] = true;
         }
     }
-    protected GameMap(String[] newMap)
+    public GameMap(String[] newMap)
     {
         this.initialMap = newMap.clone();
         mapSize.x = initialMap[0].length();
         mapSize.y = initialMap.length;
         instances = new ArrayList<Entity>();
         enemies = new ArrayList<Enemy>();
+        enemyTimer = 2;
         this.realMap = this.initialMap.clone();
         this.visibility = new boolean[mapSize.y][mapSize.x];
 
@@ -59,7 +66,7 @@ public class GameMap
         this(pastMap.initialMap);
         instances = new ArrayList<Entity>(pastMap.instances);
     }
-    protected GameMap(GameMap pastMap, boolean[][] visited)
+    public GameMap(GameMap pastMap, boolean[][] visited)
     {
         this(pastMap);
         canWalkInto = visited;
@@ -69,8 +76,8 @@ public class GameMap
         for(int i = 0;i <mapSize.y;i++){
             for(int j = 0;j<mapSize.x;j++){
                 Vector2 pos = new Vector2(j,i);
-                if(getCell(pos).getStyle() == ' ' && canWalkInto[i][j]){ freePosition.add(pos);}
-                if(getCell(pos).getStyle() == ' ' && !canWalkInto[i][j]) {positionsNotVisitedByGenerator.add(pos);}
+                if(getCell(pos).getStyle().equals(" ") && canWalkInto[i][j]){ freePosition.add(pos);}
+                if(getCell(pos).getStyle().equals(" ") && !canWalkInto[i][j]) {positionsNotVisitedByGenerator.add(pos);}
             }
         }
     }
@@ -101,17 +108,17 @@ public class GameMap
         }
         Entity fallback = new Entity();
         fallback.setPosition(new Vector2(x,y));
-        fallback.setStyle(realMap[y].charAt(x));
+        fallback.setStyle(String.valueOf(realMap[y].charAt(x)));
         return fallback;
     }
     public Entity getCell(Vector2 pos){
         return getCell(pos.x, pos.y);
     }
 
-    public Vector2 searchFirstElement(char c){
+    public Vector2 searchFirstElement(String c){
         for(int x = 0; x < mapSize.x; x++){
             for(int y = 0; y < mapSize.y; y++){
-                if(getCell(x,y).getStyle() == c) {
+                if(getCell(x,y).getStyle().equals(c)) {
                     return new Vector2(x,y);
                 }
             }
@@ -120,10 +127,15 @@ public class GameMap
     }
 
     //atualiza o mapa atual
-    public void Update(){
+    public void Update(boolean updateEnemies){
         GameMap newMap = new GameMap(this);
 
-        this.UpdateEnemies();
+        if(updateEnemies) {
+            if (--enemyTimer == 0) {
+                this.UpdateEnemies();
+                enemyTimer = 2;
+            }
+        }
 
         for(Entity i : instances){
             newMap.updateCell(i.getPosition(), i.getStyle());
@@ -137,18 +149,18 @@ public class GameMap
     }
 
     //atualiza o caractere de uma posiçao do mapa
-    public void updateCell(int x, int y, char cell){
+    public void updateCell(int x, int y, String cell){
         realMap[y] = realMap[y].substring(0, x) + cell + realMap[y].substring(x+1);
     }
-    public void updateCell(Vector2 pos, char cell){
+    public void updateCell(Vector2 pos, String cell){
         updateCell(pos.x, pos.y, cell);
     }
 
     //insere um objeto no mapa
     public void Insert(Entity... objects){
         for(Entity i : objects){
-            if(getCell(i.getPosition()).getStyle() == '#') {
-                if(i instanceof Enemy && i.getStyle() == 'B'){
+            if(getCell(i.getPosition()).getStyle().equals("#")) {
+                if(i instanceof Enemy && i.getStyle().equals(Enemy.BossStyle)){
                     i.setPosition(getRandomFreePosition());
                     Boss =(Enemy) i;
                     enemies.add((Enemy) i);
@@ -165,7 +177,7 @@ public class GameMap
             }
             if(i instanceof Player) player = (Player) i;
             if(i instanceof Enemy) {
-                if(i.getStyle() == 'B'){
+                if(i.getStyle().equals(Enemy.BossStyle)){
                     Boss = (Enemy)i;
                 }
                 enemies.add((Enemy) i);
@@ -173,7 +185,7 @@ public class GameMap
             instances.add(i);
             freePosition.remove(i.getPosition());
         }
-        Update();
+        Update(false);
     }
 
     public void Remove(Entity object){
@@ -186,7 +198,7 @@ public class GameMap
             player = null;
         }
         freePosition.add(object.getPosition());
-        Update();
+        Update(false);
     }
 
     public boolean haveEntity(Entity obj){
@@ -203,10 +215,7 @@ public class GameMap
     //checa se um objeto pode se mover para uma posiçao
     public boolean canMove(Vector2 newPos){
         Entity pos = getCell(newPos);
-        if(pos.getStyle() == '#' || pos instanceof Actor){
-            return false;
-        }
-        return true;
+        return !pos.getStyle().equals("#") && !(pos instanceof Actor);
     }
 
     private void UpdateEnemies(){
@@ -252,4 +261,6 @@ public class GameMap
         return pos;
     }
 
+    public Player getPlayer(){ return this.player; }
+    public void setPlayer(Player p){ this.player = p; }
 }

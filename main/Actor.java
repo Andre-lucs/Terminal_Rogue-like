@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import structures.Vector2;
-import structures.GameMap;
 import structures.Status;
 
 public abstract class Actor extends Entity
@@ -15,7 +14,7 @@ public abstract class Actor extends Entity
     protected Status status;
     protected Random gen;
 
-    public Actor(int atk, int def, char style)
+    public Actor(int atk, int def, String style)
     {
         super();
         attributes = new HashMap<>();
@@ -34,6 +33,8 @@ public abstract class Actor extends Entity
     public Status getStatus(){
         return status;
     }
+
+    public void setStatus(Status status){this.status = status;}
 
     public int getAtk(){
         return this.attributes.get("ATK");
@@ -73,7 +74,7 @@ public abstract class Actor extends Entity
         newPos.y += ySpd;
         if(map.canMove(newPos)){
             Position = newPos;
-            map.Update();
+            map.Update(false);
         }
     }
     public void move(Vector2 spd, GameMap map){

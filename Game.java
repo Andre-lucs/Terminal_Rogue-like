@@ -1,8 +1,5 @@
-import java.util.Scanner;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
+
 import structures.*;
 import main.*;
 
@@ -24,18 +21,14 @@ public class Game
         maps = new ArrayList<>();
         Vector2 startPos = new Vector2(8);
         gen = new MapGenerator(new Vector2(30,20), startPos);
-        p = new Player(5, 5, startPos);
-        p.increaseMaxLife(90);
     }
 
     public void Start(){
+        p = new Player(5, 5, new Vector2(8));
+        p.increaseMaxLife(90);//acrescimo de vida para testes
         NextLevel();
-        /*GameMap labirinto = gen.getNewMap();
-        maps.add(labirinto);
-        PopulateMap(maps.get(mapIndex));*/
         Scanner scanner = new Scanner(System.in);
 
-        PrintHud(maps.get(mapIndex), p);
         while(true){
             Update(maps.get(mapIndex), p, scanner);
         }
@@ -45,18 +38,19 @@ public class Game
         if(map.Boss == null){
             levelEnded = true;
         }
-        map.Update();
         p.Update();
+        map.Update(true);
         PlayerControls(maps.get(mapIndex), scanner);
         PrintHud(maps.get(mapIndex), p);
         if(p.getLife() <= 0){
+            p.setStatus(Status.DEAD);
             p.onDeath(maps.get(mapIndex));
         }
     }
 
     private void NextLevel(){
         mapIndex++;
-        levelDiff += 0.2;
+        levelDiff += 0.5;
         levelEnded = false;
         gen.setPos(new Vector2(p.getPosition()));
         GameMap labirinto = gen.getNewMap();
@@ -71,7 +65,7 @@ public class Game
         Random rdn = new Random(System.nanoTime());
         //cria e insere os inimigos (incluindo o chefe)
         Enemy boss = new Enemy((int) (40 * levelDiff),(int) (8*levelDiff), map.getRandomFreePosition());
-        boss.setStyle('B');
+        boss.setStyle("B");
         map.Boss = boss;
         map.Insert(boss);
         for(int i = 0; i <rdn.nextInt(2,7); i++) {
@@ -100,7 +94,7 @@ public class Game
             Item[] item = {Card.CreateRandom(levelDiff*2, pos[0]), Item.CreateRandom(levelDiff*2, pos[1])};
             map.Insert(item[0], item[1]);//items em paredes
         }
-        map.Update();
+        map.Update(false);
     }
 
     private void Sleep(){
@@ -112,7 +106,7 @@ public class Game
     }
 
     private void UpdateAndSleep(GameMap map){
-        map.Update();
+        map.Update(true);
         PrintHud(map, p);
         try {
             TimeUnit.MILLISECONDS.sleep((long)100);
@@ -128,6 +122,14 @@ public class Game
         if(command.contains("next") && levelEnded){
             NextLevel();
             return;
+        }
+        if(maps.get(mapIndex).getPlayer().getStatus() == Status.DEAD){
+            if(command.contains("yes")) {
+                Start();
+                System.exit(0);
+            }else if (command.contains("no")){
+                System.exit(0);
+            }
         }
         command = (command.length() != 0) ? command.substring(0, command.length()) : " ";//organiza ela
         String[] TempCommands = command.split("");//divide em varias Strings
@@ -168,32 +170,29 @@ public class Game
             else if(key.equals(Controls.CARD.get())){//vai usar uma carta ///// c2wd c3 c1a
                 try{
                 Card card = p.getCards().get(Integer.parseInt(actions.substring(0,1))-1);//pega a carta que sera usada
-                if (card.getType() == "ATK"){//se for uma carta de ataque
+                if (card.getType().equals("ATK")){//se for uma carta de ataque
                     String directions = actions.substring(1);
                     if(directions.length() > 0){
                         for(String d : directions.split("")){
                             Vector2 dir = Controls.CheckDir(d);
                             hitted = card.Use(p, dir, map);
                             UpdateAndSleep(map);
+                            warning = (hitted) ?"Acertou":"Errou";
                         }
                     }
                 }
-                else if(card.getType() == "DEF"){//se for uma carta de defesa
-                    card.Use(p,new Vector2(), map);
+                else if(card.getType().equals("DEF")){//se for uma carta de defesa
+                    card.Use(p);
                     UpdateAndSleep(map);
                 }
-                else if(card instanceof MGKCard){
-                    MGKCard mc = (MGKCard) card;
-                    if(mc.getType() == "HEAL"){
+                else if(card instanceof MGKCard mc){
+                    if(mc.getType().equals("HEAL")){
                         mc.Use(p);
                     }
                 }
                 if(card.wasFullyUsed()){
                     p.getCardsRef().remove(card);
                 }
-
-                if(hitted) warning = "Acertou";
-
                 } catch(IndexOutOfBoundsException e){
                     warning = "Carta nao existe.";
                 }
@@ -216,7 +215,7 @@ public class Game
                             p.checkCard((Card)i);
                             break;
                         }else if(i instanceof Item){
-                            warning = ("Type:" + ((Item)i).getType()+"\n"+
+                            warning = ("-".repeat(50)+"\nPreview Item:\n"+"Type:" + ((Item)i).getType()+"\n"+
                             "Description: "+ ((Item)i).getAttribute() +" "+ ((Item)i).getValue());
                         }
                     }
@@ -230,12 +229,27 @@ public class Game
                 }
             }
             else if(key.equals(Controls.HELP.get())){//ver tela de ajuda sobre comandos
-
+                warning = "m = Mover. (mwasd) Se move para as direcoes especificadas com as teclas wasd\n"+
+                "c = Carta. (c1w)(c2) Usa a carta na posicao especificada podendo ser omitido a direcao em cartas como heal e def\n"+
+                "i = Inspecionar. Ao ficar na mesma pocisao que um item mostre uma preview do que ele e\n"+
+                "e = Pegar Item. pega o item que se esta sobre\n" +
+                "h = Ajuda. Mostra o texto de ajuda" +
+                "next = Proxima Fase. Vai para o proximo nivel ao matar o chefe no nivel atual"+
+                "yes = Ao morrer digite \"yes\" para jogar de novo.";
             }
 
             Sleep();
         }
 
+    }
+
+    private String SetColorAtb(String str, String atb){
+        return switch(atb){
+            case "ATK"-> TextColor.TEXT_RED;
+            case "DEF"-> TextColor.TEXT_BLUE;
+            case "MHP"-> TextColor.TEXT_GREEN;
+            default -> TextColor.TEXT_WHITE;
+        }+ str + TextColor.TEXT_RESET;
     }
 
     public void PrintHud(GameMap map, Player p){
@@ -246,49 +260,87 @@ public class Game
         String shoe = (p.Equip.get("Shoe") != null) ? ( (p.Equip.get("Shoe").getValue()<10) ? p.Equip.get("Shoe").getValue()+" " : String.valueOf(p.Equip.get("Shoe").getValue()) ) : "  ";
         String glove = (p.Equip.get("Glove") != null) ? ( (p.Equip.get("Glove").getValue()<10) ? p.Equip.get("Glove").getValue()+" " : String.valueOf(p.Equip.get("Glove").getValue()) ) : "  ";
 
+        String helmetAtb = ((p.Equip.get("Helmet") != null)? p.Equip.get("Helmet").getAttribute() : "   " );
+        String chestAtb = ((p.Equip.get("ChestPlate") != null)? p.Equip.get("ChestPlate").getAttribute() : "   " );
+        String shoeAtb = ((p.Equip.get("Shoe") != null)? p.Equip.get("Shoe").getAttribute() : "   " );
+        String gloveAtb = ((p.Equip.get("Glove") != null)? p.Equip.get("Glove").getAttribute() : "   " );
+
+        helmet = SetColorAtb(helmet, helmetAtb);
+        chestPlate = SetColorAtb(chestPlate, chestAtb);
+        shoe = SetColorAtb(shoe, shoeAtb);
+        glove = SetColorAtb(glove, gloveAtb);
+        helmetAtb = SetColorAtb(helmetAtb, helmetAtb);
+        chestAtb = SetColorAtb(chestAtb,chestAtb);
+        shoeAtb = SetColorAtb(shoeAtb,shoeAtb);
+        gloveAtb = SetColorAtb(gloveAtb,gloveAtb);
         String[] playerEquip = {
     "                    .-'-'-.        #########",
-    "                    /     \\        #  "+((p.Equip.get("Helmet") != null)? p.Equip.get("Helmet").getAttribute() : "   " )+"  #",
+    "                    /     \\        #  "+helmetAtb+"  #",
     "                   | o   o | <-----#  "+helmet+"   #",
     "                   \\   ∆   /       #       #",
     "                    '-...-'        #########",
     "   #########           |           #########",
-    "   #  "+((p.Equip.get("Glove") != null)? p.Equip.get("Glove").getAttribute() : "   " )+"  #          /|\\          #  "+((p.Equip.get("ChestPlate") != null)? p.Equip.get("ChestPlate").getAttribute() : "   " )+"  #",
+    "   #  "+gloveAtb+"  #          /|\\          #  "+chestAtb+"  #",
     "   #  "+glove+"   #-------| / | \\ <-------#  "+chestPlate+"   #",
     "   #       #       v/  |  \\        #       #",
     "   #########       /   |   \\       #########",
     "   #########      /   / \\   \\",
-    "   #  "+((p.Equip.get("Shoe") != null)? p.Equip.get("Shoe").getAttribute() : "   " )+"  #         /   \\",
+    "   #  "+shoeAtb+"  #         /   \\",
     "   #  "+shoe+"   #------> /     \\",
     "   #       #       /       \\",
     "   #########      /         \\"
         };
 
-
         int maxY = Math.max(playerEquip.length, map.getMapSize().y);
         String[] tempMap = map.getRealMap();
-        for(int i = 0; i <  maxY; i++){
+        for(int i = 0; i <  maxY; i++){//imprime mapa e equipamento
             try{
                 for(int j = 0; j < tempMap[i].length(); j++){
-                    System.out.print((map.visibility[i][j]) ? tempMap[i].charAt(j) : " ");
+                    String cell = String.valueOf(tempMap[i].charAt(j));
+                    cell = switch(cell){
+                        case "E" , "B" -> TextColor.TEXT_RED+cell+TextColor.TEXT_RESET;
+                        case "#" -> TextColor.TEXT_YELLOW+cell+TextColor.TEXT_RESET;
+                        case "P" -> TextColor.TEXT_WHITE+cell+TextColor.TEXT_RESET;
+                        case "I" -> TextColor.TEXT_BLUE+cell+TextColor.TEXT_RESET;
+                        default -> cell;
+                    };
+                    System.out.print(TextColor.ANSI_BLACK_BACKGROUND);
+                    System.out.print((map.visibility[i][j]) ? cell : " ");
                 }
             }catch(ArrayIndexOutOfBoundsException e){
-                System.out.print(String.valueOf(' ').repeat(map.getMapSize().x));
+                System.out.print(" ".repeat(map.getMapSize().x));
             }
             try{
-            System.out.println(playerEquip[i]);
+                String pEquip = playerEquip[i];
+                System.out.println(pEquip);
             }catch(ArrayIndexOutOfBoundsException e){
                 System.out.println();
             }
         }
-        for(Enemy e : map.getEnemies()) {//print enemy info if hitted
-            if(e.KnowsPlayer()) e.PrintInfo();
-        }
+        System.out.println(TextColor.TEXT_RESET);
         if(levelEnded)System.out.println("O chefe foi morto. digite \"next\" para ir para o proximo nivel.");
         else System.out.println("Inimigos Faltando: "+ map.getEnemies().size());
+        int i = 1;
+        boolean printOnce = true;
+        for(Enemy e : map.getEnemies()) {//imprime informacoes do inimigo ao entrar em combate
+            if(e.KnowsPlayer()) {
+                if(printOnce) {
+                    System.out.println((maps.get(mapIndex).enemyTimer == 1) ? "Os inimigos vao agir na sua proxima acao." : "Os inimigos nao vao agir.");
+                    printOnce = false;
+                }
+                System.out.println(i + ": \n" + e);
+            }
+            i++;
+        }
         System.out.print((warning == null) ? "" :warning+"\n");
         warning = null;
+        System.out.println("-".repeat(100));
         p.PrintInfo();
         p.PrintCards();
+    }
+    public static void main(String[] args){
+        Game game;
+        game = new Game();
+        game.Start();
     }
 }

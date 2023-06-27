@@ -15,7 +15,7 @@ public class Item extends Entity
         this.attribute = attribute;
         this.value = value;
         this.setPosition(pos);
-        this.setStyle('I');
+        this.setStyle("I");
     }
 
     public String getAttribute(){
